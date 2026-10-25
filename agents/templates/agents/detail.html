@@ -1,0 +1,108 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}Agent Task | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <a href="{% url 'mobile_dashboard' %}" class="text-xs text-teal-400 hover:underline flex items-center space-x-1 mb-1">
+                    <span>← Back to Counselor</span>
+                </a>
+                <h2 class="text-base font-bold text-white">Agent Task Record</h2>
+                <span class="text-[10px] text-slate-400 font-mono">ID: {{ task.task_id }}</span>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-teal-950 text-teal-300 border border-teal-800">
+                {{ task.status|upper }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Original Prompt -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Original Inquiry</h3>
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 leading-relaxed font-medium">
+            {{ task.prompt }}
+        </div>
+        <span class="text-[10px] text-slate-500 mt-2 block">{{ task.created_at|date:"l, d F Y @ H:i" }}</span>
+    </div>
+
+    <!-- Agent Response Output -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Agent Execution Output</h3>
+            <button type="button" id="detail-copy-btn" onclick="copyDetailText()" class="text-teal-400 hover:text-teal-300 text-xs font-semibold flex items-center space-x-1 cursor-pointer tap-scale">
+                <span>📋</span>
+                <span id="detail-copy-text">Copy Text</span>
+            </button>
+        </div>
+        <div id="detailOutput" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 leading-relaxed space-y-2">
+            {{ task.response }}
+        </div>
+    </div>
+
+</div>
+
+<script>
+const rawResponseText = {{ task.response|json_script:"task-raw" }};
+
+function copyDetailText() {
+    const el = document.getElementById('detailOutput');
+    const textToCopy = el ? el.innerText.trim() : "";
+    if (!textToCopy) return;
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showDetailCopyFeedback("✓ Copied!", true);
+        }).catch(() => {
+            fallbackDetailCopy(textToCopy);
+        });
+    } else {
+        fallbackDetailCopy(textToCopy);
+    }
+}
+
+function fallbackDetailCopy(text) {
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showDetailCopyFeedback("✓ Copied!", true);
+    } catch (e) {
+        showDetailCopyFeedback("⚠️ Failed", false);
+    }
+}
+
+function showDetailCopyFeedback(msg, isSuccess) {
+    const btnText = document.getElementById('detail-copy-text');
+    const btn = document.getElementById('detail-copy-btn');
+    if (!btnText || !btn) return;
+    const old = btnText.innerText;
+    btnText.innerText = msg;
+    btn.className = isSuccess 
+        ? "text-emerald-300 font-bold text-xs bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700 flex items-center space-x-1"
+        : "text-amber-300 font-bold text-xs bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700 flex items-center space-x-1";
+    setTimeout(() => {
+        btnText.innerText = old;
+        btn.className = "text-teal-400 hover:text-teal-300 text-xs font-semibold flex items-center space-x-1 cursor-pointer tap-scale";
+    }, 2000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('detailOutput');
+    if (el && window.marked) {
+        el.innerHTML = marked.parse(el.innerText);
+    }
+});
+</script>
+{% endblock %}

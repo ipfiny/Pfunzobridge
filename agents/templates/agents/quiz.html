@@ -1,0 +1,192 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}Career Guidance Quiz | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-semibold text-teal-400 bg-teal-950 px-2 py-0.5 rounded border border-teal-800/60 uppercase">
+                    Vocational Discovery
+                </span>
+                <h2 class="text-lg font-bold text-white mt-1">Career Guidance Quiz</h2>
+                <p class="text-xs text-slate-300">Answer 5 quick questions to match your natural strengths to South Africa's high-growth industries and tertiary courses.</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-lg shrink-0 ml-2">
+                🧭
+            </div>
+        </div>
+
+        <!-- Step Progress Bar -->
+        <div class="mt-3.5 pt-3 border-t border-slate-800">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium mb-1">
+                <span id="quizStepText">Question 1 of 5</span>
+                <span id="quizPctText">20%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+                <div id="quizProgressBar" class="bg-gradient-to-r from-teal-500 to-emerald-400 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Quiz Question Container -->
+    <div id="quizContainer" class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg space-y-4">
+        <h3 id="quizQuestionTitle" class="text-sm font-bold text-slate-100 leading-snug">
+            Loading question...
+        </h3>
+
+        <div id="quizOptionsList" class="space-y-2.5">
+            <!-- Populated via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Quiz Result Container (Initially Hidden) -->
+    <div id="quizResultContainer" class="hidden space-y-4">
+        <div class="rounded-2xl bg-gradient-to-br from-teal-950 via-slate-900 to-slate-950 border border-teal-700/60 p-5 shadow-2xl relative overflow-hidden">
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40 uppercase mb-2" id="archetypeBadge">
+                STEM &amp; Innovation
+            </div>
+            <h3 class="text-xl font-extrabold text-white" id="archetypeTitle">Innovator &amp; Systems Builder</h3>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed" id="archetypeDescription"></p>
+
+            <div class="mt-4 pt-4 border-t border-teal-900/50 space-y-3">
+                <div>
+                    <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider block">Top South African Careers:</span>
+                    <ul id="archetypeCareers" class="mt-1 space-y-1 text-xs text-slate-200 list-disc list-inside"></ul>
+                </div>
+
+                <div>
+                    <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider block">Recommended Tertiary Qualification:</span>
+                    <p id="archetypePath" class="text-xs text-slate-300 mt-0.5"></p>
+                </div>
+
+                <div>
+                    <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider block">Top Institutions in South Africa:</span>
+                    <div id="archetypeInstitutions" class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]"></div>
+                </div>
+
+                <div>
+                    <span class="text-[11px] font-bold text-teal-400 uppercase tracking-wider block">Target Bursaries:</span>
+                    <div id="archetypeBursaries" class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]"></div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="mt-5 flex flex-col space-y-2">
+                <button type="button" onclick="askAiAboutArchetype()" class="w-full py-3 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shadow-lg shadow-teal-500/20 tap-scale flex items-center justify-center space-x-2">
+                    <span>Ask PfunzoBridge AI to Plan This Career</span>
+                    <span>→</span>
+                </button>
+                <button type="button" onclick="restartQuiz()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold tap-scale">
+                    Retake Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const questions = {{ questions_json|safe }};
+const archetypes = {{ archetypes_json|safe }};
+
+let currentQuestionIndex = 0;
+const scores = {
+    tech_builder: 0,
+    analytical: 0,
+    people_social: 0,
+    enterprise_business: 0
+};
+
+function renderQuestion() {
+    if (currentQuestionIndex >= questions.length) {
+        showResults();
+        return;
+    }
+
+    const q = questions[currentQuestionIndex];
+    document.getElementById('quizStepText').innerText = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    const pct = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
+    document.getElementById('quizPctText').innerText = `${pct}%`;
+    document.getElementById('quizProgressBar').style.width = `${pct}%`;
+
+    document.getElementById('quizQuestionTitle').innerText = q.question;
+
+    const optionsList = document.getElementById('quizOptionsList');
+    optionsList.innerHTML = q.options.map((opt, i) => `
+        <button type="button" onclick="selectOption('${opt.trait}')" 
+            class="w-full text-left p-3.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-teal-500/50 text-xs text-slate-200 font-medium tap-scale transition flex items-center space-x-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-teal-400 font-bold shrink-0">
+                ${String.fromCharCode(65 + i)}
+            </span>
+            <span class="flex-1">${opt.text}</span>
+        </button>
+    `).join('');
+}
+
+function selectOption(trait) {
+    if (scores[trait] !== undefined) {
+        scores[trait]++;
+    }
+    currentQuestionIndex++;
+    renderQuestion();
+}
+
+let winningKey = "tech_builder";
+
+function showResults() {
+    document.getElementById('quizContainer').classList.add('hidden');
+    document.getElementById('quizResultContainer').classList.remove('hidden');
+
+    // Find highest score
+    let highestTrait = "tech_builder";
+    let maxVal = -1;
+    for (const [trait, count] of Object.entries(scores)) {
+        if (count > maxVal) {
+            maxVal = count;
+            highestTrait = trait;
+        }
+    }
+    winningKey = highestTrait;
+    const arch = archetypes[highestTrait];
+
+    document.getElementById('archetypeBadge').innerText = arch.badge;
+    document.getElementById('archetypeTitle').innerText = arch.title;
+    document.getElementById('archetypeDescription').innerText = arch.description;
+
+    document.getElementById('archetypeCareers').innerHTML = arch.top_careers.map(c => `<li>${c}</li>`).join('');
+    document.getElementById('archetypePath').innerText = arch.recommended_path;
+
+    document.getElementById('archetypeInstitutions').innerHTML = arch.top_institutions.map(inst => `
+        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-teal-300 font-medium">${inst}</span>
+    `).join('');
+
+    document.getElementById('archetypeBursaries').innerHTML = arch.bursaries.map(b => `
+        <span class="px-2 py-0.5 rounded bg-teal-950 border border-teal-800 text-teal-400 font-medium">${b}</span>
+    `).join('');
+}
+
+function askAiAboutArchetype() {
+    const arch = archetypes[winningKey];
+    const prompt = `I completed the PfunzoBridge Career Guidance Quiz and was matched with the "${arch.title}" profile (${arch.badge}). What are the exact Matric subject requirements, high school mark cutoffs, and South African university or TVET application steps for this pathway?`;
+    
+    sessionStorage.setItem('pending_agent_prompt', prompt);
+    window.location.href = "{% url 'mobile_dashboard' %}";
+}
+
+function restartQuiz() {
+    currentQuestionIndex = 0;
+    for (const key in scores) scores[key] = 0;
+    document.getElementById('quizContainer').classList.remove('hidden');
+    document.getElementById('quizResultContainer').classList.add('hidden');
+    renderQuestion();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    renderQuestion();
+});
+</script>
+{% endblock %}

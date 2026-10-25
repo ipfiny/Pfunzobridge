@@ -1,0 +1,17 @@
+{
+  "name": "PfunzoBridge - Access to Higher Education",
+  "short_name": "PfunzoBridge",
+  "description": "Mobile-First Agentic Education Guidance Platform for South African High School Learners and Matriculants",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#008479",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇿🇦</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

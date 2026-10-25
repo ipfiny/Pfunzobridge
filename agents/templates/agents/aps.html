@@ -1,0 +1,930 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}APS &amp; Marks Calculator | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Compact Header -->
+    <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-3 sm:p-3.5 shadow-sm flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-2">
+                <h2 class="text-base font-bold text-white">APS &amp; Marks Calculator</h2>
+                <span class="text-[10px] font-semibold text-teal-400 bg-teal-950 px-1.5 py-0.5 rounded border border-teal-800/60 uppercase">DBE 7-Point</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Enter 0-100% marks to calculate Standard APS &amp; Total with LO.</p>
+        </div>
+        <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm shrink-0 ml-2">
+            🧮
+        </div>
+    </div>
+
+    <!-- Floating Live Sync Toast -->
+    <div id="syncToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-teal-400 text-slate-950 font-black text-xs shadow-2xl flex items-center space-x-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-2 border border-teal-200">
+        <span class="text-sm">☁️</span>
+        <span id="syncToastMsg">Live Synced with Laptop</span>
+    </div>
+
+    <!-- Live Cross-Device Sync Status -->
+    {% if is_authenticated %}
+    <div id="syncStatusBar" class="rounded-2xl bg-emerald-950/60 border border-emerald-800/60 p-3 shadow-sm flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2.5">
+            <div class="relative flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span class="absolute w-4 h-4 rounded-full bg-emerald-400/40 animate-ping"></span>
+            </div>
+            <div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="font-bold text-white text-[12px]">Cross-Device Sync Active</span>
+                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-900 text-emerald-300 font-bold border border-emerald-700/60">Live 3s</span>
+                </div>
+                <p class="text-[10px] text-slate-300 mt-0.5">
+                    Account: <strong class="text-teal-300">{{ user.username }}</strong> &bull; Any update on laptop instantly syncs here!
+                </p>
+            </div>
+        </div>
+        <button type="button" onclick="checkServerForUpdates()" class="px-2 py-1 rounded bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold border border-emerald-700/60 tap-scale shrink-0 cursor-pointer">
+            🔄 Sync Now
+        </button>
+    </div>
+    {% else %}
+    <div id="syncStatusBar" class="rounded-2xl bg-gradient-to-r from-amber-950/90 via-slate-900 to-slate-950 border border-amber-800/80 p-3.5 shadow-md space-y-2.5">
+        <div class="flex items-start space-x-2.5">
+            <span class="text-xl shrink-0">📱</span>
+            <div>
+                <div class="flex items-center space-x-1.5">
+                    <h3 class="text-xs font-bold text-amber-300">Device in Guest Mode (Not Synced with Laptop)</h3>
+                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-400 font-bold border border-amber-800/60">Local Only</span>
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                    Your laptop is signed in to <strong class="text-white">nyamandeipfi@gmail.com</strong>. To automatically mirror marks between laptop and phone in real-time, connect this device:
+                </p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+            <form method="POST" action="{% url 'login' %}?next={% url 'aps_calculator' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="quick_login_nyamande">
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-teal-400 hover:bg-teal-300 active:scale-95 text-slate-950 font-black text-xs shadow-lg shadow-teal-950/60 flex items-center space-x-1.5 cursor-pointer transition-all">
+                    <span>⚡</span>
+                    <span>1-Tap Connect (nyamandeipfi@gmail.com)</span>
+                </button>
+            </form>
+            <a href="{% url 'login' %}?next={% url 'aps_calculator' %}" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 tap-scale">
+                Sign In With Password &rarr;
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Live APS Scorecard Display -->
+    <div id="scorecardSection" class="rounded-2xl bg-gradient-to-br from-teal-950 via-slate-900 to-slate-950 border border-teal-800/60 p-4 shadow-xl">
+        <div class="grid grid-cols-2 gap-3 text-center">
+            <!-- Standard APS Card -->
+            <div id="stdCard" class="bg-slate-900/90 rounded-xl p-3 border border-teal-900/70 transition-all duration-300">
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Standard APS</span>
+                <span class="text-3xl font-extrabold text-teal-300 font-mono transition-transform duration-300 inline-block my-0.5" id="standardApsScore">--</span>
+                <span class="text-[10px] text-slate-400 block">(Excludes Life Orientation)</span>
+                <span class="text-[9px] text-teal-400/80 font-medium block mt-0.5">Wits, UCT, UP, Stellenbosch, UKZN</span>
+            </div>
+            <!-- Total with LO Card -->
+            <div id="loCard" class="bg-slate-900/90 rounded-xl p-3 border border-teal-900/70 transition-all duration-300">
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Total with LO</span>
+                <span class="text-3xl font-extrabold text-emerald-300 font-mono transition-transform duration-300 inline-block my-0.5" id="withLoApsScore">--</span>
+                <span class="text-[10px] text-slate-400 block">(Includes Life Orientation)</span>
+                <span class="text-[9px] text-emerald-400/80 font-medium block mt-0.5">Used by UJ &amp; TVET Colleges</span>
+            </div>
+        </div>
+
+        <!-- Calculation Formula Breakdown Box -->
+        <div id="breakdownBox" class="mt-3 p-3 rounded-xl bg-slate-950/80 border border-teal-800/60 text-xs text-slate-300 hidden transition-all duration-300">
+            <div class="flex items-center space-x-1.5 text-teal-300 font-bold mb-2">
+                <span class="text-sm">📊</span>
+                <span class="text-xs uppercase tracking-wider">How Your APS Was Calculated:</span>
+            </div>
+            <div class="space-y-1.5 text-[11px]">
+                <div class="flex justify-between items-center text-slate-300 bg-slate-900/70 p-2 rounded-lg border border-slate-800">
+                    <div>
+                        <span class="text-slate-400 block font-semibold">Standard APS (Top 6 non-LO subjects):</span>
+                        <span id="stdCalcDetail" class="font-mono text-teal-300 text-xs font-bold block mt-0.5">--</span>
+                    </div>
+                    <span class="text-[10px] text-teal-400 bg-teal-950 px-2 py-0.5 rounded border border-teal-800 font-bold shrink-0 ml-2" id="stdBadge">-- pts</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300 bg-slate-900/70 p-2 rounded-lg border border-slate-800">
+                    <div>
+                        <span class="text-slate-400 block font-semibold">Life Orientation (LO):</span>
+                        <span id="loCalcDetail" class="font-mono text-amber-300 text-xs font-bold block mt-0.5">--</span>
+                    </div>
+                    <span class="text-[10px] text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800 font-bold shrink-0 ml-2" id="loBadge">-- pts</span>
+                </div>
+                <div class="flex justify-between items-center bg-teal-950/80 p-2 rounded-lg border border-teal-700/80 text-emerald-300 font-bold">
+                    <span class="text-xs">Total APS with LO (UJ / TVET Scale):</span>
+                    <span id="totalLoDetail" class="font-mono text-sm text-emerald-300">--</span>
+                </div>
+            </div>
+            <p id="missingWarning" class="text-[11px] text-amber-400 mt-2 bg-amber-950/50 p-2 rounded-lg border border-amber-800/60 hidden"></p>
+        </div>
+
+        <div class="mt-3 pt-3 border-t border-teal-900/40 flex items-center justify-between">
+            <div class="text-left pr-2">
+                <span class="text-[10px] text-slate-400 uppercase block">Admission Pass Status:</span>
+                <span class="text-xs font-bold text-teal-300" id="passStatus">Enter your subject percentage marks below</span>
+            </div>
+            <button type="button" onclick="askAiAboutAps()" class="px-3 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shadow tap-scale shrink-0 cursor-pointer">
+                Ask AI Advisor
+            </button>
+        </div>
+    </div>
+
+    <!-- Subjects Input Form -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg space-y-3">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">7 NSC Matric Subjects</h3>
+            <div class="flex items-center space-x-1.5">
+                <button type="button" onclick="clearAllMarks()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-semibold tap-scale border border-slate-700 cursor-pointer">
+                    🧹 Clear
+                </button>
+                <button type="button" onclick="loadSampleMarks()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-[11px] font-semibold tap-scale border border-slate-700 cursor-pointer">
+                    📝 Load Sample
+                </button>
+            </div>
+        </div>
+
+        <!-- Subject 1: English -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <label class="text-xs font-semibold text-slate-200 block">English HL / FAL</label>
+                <span class="text-[10px] text-slate-400">Compulsory Language</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_0" min="0" max="100" placeholder="%" oninput="onMarkInput(0)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_0" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 2: Maths or Maths Lit -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <select id="math_type" onchange="onMarkInput(1)" class="text-xs font-semibold text-slate-200 bg-transparent focus:outline-none w-full">
+                    <option value="Mathematics (Pure Maths)" class="bg-slate-900">Mathematics (Pure)</option>
+                    <option value="Mathematical Literacy" class="bg-slate-900">Mathematical Literacy</option>
+                    <option value="Technical Mathematics" class="bg-slate-900">Technical Mathematics</option>
+                </select>
+                <span class="text-[10px] text-slate-400">Compulsory Quantitative</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_1" min="0" max="100" placeholder="%" oninput="onMarkInput(1)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_1" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 3: Life Orientation -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <label class="text-xs font-semibold text-slate-200 block">Life Orientation (LO)</label>
+                <span class="text-[10px] text-amber-400/90 font-medium">Excluded in Standard • Included in Total</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_2" min="0" max="100" placeholder="%" oninput="onMarkInput(2)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_2" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 4: Elective 1 -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <select id="sub_3" onchange="saveMarksToStorage()" class="text-xs font-semibold text-slate-200 bg-transparent focus:outline-none w-full">
+                    <option value="Physical Sciences" class="bg-slate-900">Physical Sciences</option>
+                    <option value="Accounting" class="bg-slate-900">Accounting</option>
+                    <option value="History" class="bg-slate-900">History</option>
+                    <option value="Geography" class="bg-slate-900">Geography</option>
+                </select>
+                <span class="text-[10px] text-slate-400">Elective Subject 1</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_3" min="0" max="100" placeholder="%" oninput="onMarkInput(3)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_3" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 5: Elective 2 -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <select id="sub_4" onchange="saveMarksToStorage()" class="text-xs font-semibold text-slate-200 bg-transparent focus:outline-none w-full">
+                    <option value="Life Sciences" class="bg-slate-900">Life Sciences (Biology)</option>
+                    <option value="Business Studies" class="bg-slate-900">Business Studies</option>
+                    <option value="Information Technology" class="bg-slate-900">Information Technology</option>
+                    <option value="Computer Applications Tech" class="bg-slate-900">CAT</option>
+                </select>
+                <span class="text-[10px] text-slate-400">Elective Subject 2</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_4" min="0" max="100" placeholder="%" oninput="onMarkInput(4)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_4" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 6: Elective 3 -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <select id="sub_5" onchange="saveMarksToStorage()" class="text-xs font-semibold text-slate-200 bg-transparent focus:outline-none w-full">
+                    <option value="Geography" class="bg-slate-900">Geography</option>
+                    <option value="Economics" class="bg-slate-900">Economics</option>
+                    <option value="Agricultural Sciences" class="bg-slate-900">Agricultural Sciences</option>
+                    <option value="Civil Technology" class="bg-slate-900">Civil Technology</option>
+                </select>
+                <span class="text-[10px] text-slate-400">Elective Subject 3</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_5" min="0" max="100" placeholder="%" oninput="onMarkInput(5)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_5" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- Subject 7: Elective 4 / African Language / Arts -->
+        <div class="grid grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <div class="col-span-7">
+                <select id="sub_6" onchange="saveMarksToStorage()" class="text-xs font-semibold text-slate-200 bg-transparent focus:outline-none w-full">
+                    <option value="IsiZulu / Sepedi / Xhosa / Afrikaans" class="bg-slate-900">African / 2nd Language (IsiZulu, Sepedi, Afrikaans, etc.)</option>
+                    <option value="Dramatic / Visual Arts" class="bg-slate-900">Dramatic / Visual Arts</option>
+                    <option value="Engineering Graphics & Design (EGD)" class="bg-slate-900">EGD (Engineering Graphics)</option>
+                    <option value="Tourism" class="bg-slate-900">Tourism</option>
+                    <option value="Hospitality / Consumer Studies" class="bg-slate-900">Hospitality / Consumer Studies</option>
+                    <option value="Music" class="bg-slate-900">Music</option>
+                </select>
+                <span class="text-[10px] text-slate-400">Elective Subject 4 / 2nd Language</span>
+            </div>
+            <div class="col-span-3">
+                <input type="number" id="mark_6" min="0" max="100" placeholder="%" oninput="onMarkInput(6)" 
+                    class="w-full text-center rounded-lg bg-slate-900 border border-slate-700 p-1.5 text-sm font-bold text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="col-span-2 text-center">
+                <span id="level_6" class="text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800">L-</span>
+            </div>
+        </div>
+
+        <!-- EXPLICIT ACTION: CALCULATE APS BUTTON -->
+        <div class="pt-3 pb-1 space-y-2">
+            <button type="button" onclick="calculateApsButton()" id="calculateBtn"
+                class="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-400 hover:from-teal-400 hover:to-emerald-300 active:scale-95 text-slate-950 font-black text-sm shadow-xl shadow-teal-950/60 flex items-center justify-center space-x-2 border border-teal-300/30 transition-all duration-200 cursor-pointer">
+                <span class="text-xl">⚡</span>
+                <span id="calcBtnText" class="tracking-wide text-xs sm:text-sm uppercase font-black">Calculate Standard APS &amp; Total with LO</span>
+            </button>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                <span>Standard = Top 6 (Excl. LO)</span>
+                <span>Total = With LO (UJ &amp; TVETs)</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Eligible South African Courses Section -->
+    <div id="coursesSection" class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Qualifying South African Courses</h3>
+            <span id="eligibleCount" class="text-[11px] text-slate-400 font-semibold px-2 py-0.5 rounded bg-slate-800 border border-slate-700">Awaiting Marks</span>
+        </div>
+
+        <div id="eligibleList" class="space-y-2.5">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-center text-xs text-slate-400 space-y-1">
+                <p class="font-medium text-slate-300">No marks entered yet.</p>
+                <p class="text-[11px]">Type your percentage marks in the fields above and tap <strong class="text-teal-300">"Calculate Standard APS &amp; Total with LO"</strong> to see which degrees and TVET programmes match your score.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const IS_AUTHENTICATED = {% if user.is_authenticated %}true{% else %}false{% endif %};
+const USER_STORAGE_KEY = "{% if user.is_authenticated %}pfunzobridge_marks_user_{{ user.id }}{% else %}pfunzobridge_marks_guest{% endif %}";
+let autosaveTimeout = null;
+let lastServerTimestamp = {{ profile_timestamp|default:0 }};
+let isUserTyping = false;
+let isPolling = false;
+
+// Toast notification helper
+function showSyncToast(msg) {
+    const toast = document.getElementById('syncToast');
+    const msgEl = document.getElementById('syncToastMsg');
+    if (!toast || !msgEl) return;
+    msgEl.innerText = msg;
+    toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-2');
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
+    }, 2800);
+}
+
+// Safely set dropdown option
+function setSelectValue(id, val) {
+    const el = document.getElementById(id);
+    if (el && val) {
+        for (let opt of el.options) {
+            if (opt.value === val) {
+                el.value = val;
+                break;
+            }
+        }
+    }
+}
+
+// DBE NSC 7-Point scale conversion
+function getLevel(pct) {
+    if (pct >= 80) return 7;
+    if (pct >= 70) return 6;
+    if (pct >= 60) return 5;
+    if (pct >= 50) return 4;
+    if (pct >= 40) return 3;
+    if (pct >= 30) return 2;
+    if (pct > 0) return 1;
+    return null;
+}
+
+// Live update of level badge when typing a single mark & persist to storage
+function onMarkInput(index, skipAutoSync = false) {
+    const inp = document.getElementById(`mark_${index}`);
+    const lvlBadge = document.getElementById(`level_${index}`);
+    if (!inp || !lvlBadge) return;
+
+    const valStr = inp.value.trim();
+    if (valStr !== '') {
+        const val = Math.min(100, Math.max(0, parseFloat(valStr) || 0));
+        const lvl = getLevel(val);
+        if (lvl !== null) {
+            lvlBadge.innerText = `L${lvl}`;
+            if (index === 2) {
+                lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-amber-950 text-amber-400 border border-amber-800';
+            } else {
+                lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-teal-950 text-teal-400 border border-teal-800';
+            }
+        }
+    } else {
+        lvlBadge.innerText = 'L-';
+        lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800';
+    }
+
+    if (!skipAutoSync) {
+        saveMarksToStorage();
+    }
+}
+
+// Background auto-sync to server database so all logged-in devices update immediately
+async function syncMarksToServer() {
+    const rawValues = [];
+    for (let i = 0; i < 7; i++) {
+        const valStr = document.getElementById(`mark_${i}`)?.value.trim() || '';
+        rawValues.push(valStr !== '' ? Math.min(100, Math.max(0, parseFloat(valStr) || 0)) : 0);
+    }
+    const payload = {
+        subjects: [
+            { name: "English", mark: rawValues[0], is_lo: false },
+            { name: document.getElementById('math_type').value, mark: rawValues[1], is_lo: false },
+            { name: "Life Orientation", mark: rawValues[2], is_lo: true },
+            { name: document.getElementById('sub_3').value, mark: rawValues[3], is_lo: false },
+            { name: document.getElementById('sub_4').value, mark: rawValues[4], is_lo: false },
+            { name: document.getElementById('sub_5').value, mark: rawValues[5], is_lo: false },
+            { name: document.getElementById('sub_6').value, mark: rawValues[6], is_lo: false }
+        ]
+    };
+    try {
+        const res = await fetch('/api/sync-profile/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success && data.timestamp) {
+            lastServerTimestamp = data.timestamp;
+        }
+    } catch (e) {
+        console.warn("Auto-sync error:", e);
+    }
+}
+
+// Save marks and dropdown selections immediately to user-scoped storage & cloud
+function saveMarksToStorage() {
+    const data = {
+        marks: [],
+        dropdowns: {
+            math_type: document.getElementById('math_type') ? document.getElementById('math_type').value : '',
+            sub_3: document.getElementById('sub_3') ? document.getElementById('sub_3').value : '',
+            sub_4: document.getElementById('sub_4') ? document.getElementById('sub_4').value : '',
+            sub_5: document.getElementById('sub_5') ? document.getElementById('sub_5').value : '',
+            sub_6: document.getElementById('sub_6') ? document.getElementById('sub_6').value : ''
+        }
+    };
+    let hasAnyMark = false;
+    for (let i = 0; i < 7; i++) {
+        const inp = document.getElementById(`mark_${i}`);
+        const valStr = inp ? inp.value.trim() : '';
+        data.marks.push(valStr);
+        if (valStr !== '') hasAnyMark = true;
+    }
+
+    if (hasAnyMark) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data));
+        // Purge legacy unnamespaced key so it never interferes
+        localStorage.removeItem('edubridge_saved_marks');
+
+        // Debounce autosave to cloud database (600ms)
+        clearTimeout(autosaveTimeout);
+        autosaveTimeout = setTimeout(() => {
+            syncMarksToServer();
+        }, 600);
+    }
+}
+
+// Active real-time sync poller checking for changes made on other devices (e.g. laptop)
+async function checkServerForUpdates() {
+    if (isPolling || isUserTyping) return;
+    isPolling = true;
+    try {
+        const res = await fetch('/api/sync-profile/?t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+
+        // If server profile timestamp is newer than our local timestamp
+        if (data.timestamp && data.timestamp > lastServerTimestamp) {
+            lastServerTimestamp = data.timestamp;
+
+            if (Array.isArray(data.subjects) && data.subjects.length === 7) {
+                // Check if any mark or dropdown actually differs
+                let hasDifferences = false;
+                for (let i = 0; i < 7; i++) {
+                    const currentVal = document.getElementById(`mark_${i}`)?.value.trim() || '';
+                    const serverVal = (data.subjects[i].mark !== undefined && data.subjects[i].mark !== null && data.subjects[i].mark > 0) ? String(data.subjects[i].mark) : '';
+                    if (currentVal !== serverVal) {
+                        hasDifferences = true;
+                        break;
+                    }
+                }
+
+                if (hasDifferences) {
+                    // Update input fields
+                    for (let i = 0; i < 7; i++) {
+                        const inp = document.getElementById(`mark_${i}`);
+                        const serverVal = (data.subjects[i].mark !== undefined && data.subjects[i].mark !== null && data.subjects[i].mark > 0) ? String(data.subjects[i].mark) : '';
+                        if (inp) {
+                            inp.value = serverVal;
+                            onMarkInput(i, true);
+                        }
+                    }
+
+                    // Update dropdowns if specified
+                    if (data.subjects[1]?.name) setSelectValue('math_type', data.subjects[1].name);
+                    if (data.subjects[3]?.name) setSelectValue('sub_3', data.subjects[3].name);
+                    if (data.subjects[4]?.name) setSelectValue('sub_4', data.subjects[4].name);
+                    if (data.subjects[5]?.name) setSelectValue('sub_5', data.subjects[5].name);
+                    if (data.subjects[6]?.name) setSelectValue('sub_6', data.subjects[6].name);
+
+                    // Recalculate APS scores
+                    calculateApsButton({ silent: true });
+
+                    // Visual pulse animation on scorecard
+                    const stdEl = document.getElementById('standardApsScore');
+                    const loEl = document.getElementById('withLoApsScore');
+                    if (stdEl && loEl) {
+                        stdEl.classList.add('text-amber-300', 'scale-110');
+                        loEl.classList.add('text-amber-300', 'scale-110');
+                        setTimeout(() => {
+                            stdEl.classList.remove('text-amber-300', 'scale-110');
+                            loEl.classList.remove('text-amber-300', 'scale-110');
+                        }, 500);
+                    }
+
+                    // Show friendly feedback toast
+                    showSyncToast("☁️ Live Synced: Updated from laptop!");
+                }
+            }
+        }
+    } catch (e) {
+        // network silent
+    } finally {
+        isPolling = false;
+    }
+}
+
+// Restore saved marks: Prioritizes Server Cloud Profile for logged-in accounts across laptop & phone
+function restoreSavedMarks() {
+    let savedData = null;
+
+    // 1. If user is logged in, ALWAYS prioritize server database profile (Cloud Sync across phone & laptop)
+    if (IS_AUTHENTICATED) {
+        try {
+            const serverData = {{ saved_subjects_json|safe }};
+            if (serverData && Array.isArray(serverData) && serverData.length === 7) {
+                const marks = serverData.map(s => (s.mark !== undefined && s.mark !== null && s.mark !== '' && s.mark > 0) ? s.mark.toString() : '');
+                if (marks.some(m => m !== '')) {
+                    savedData = {
+                        marks: marks,
+                        dropdowns: {
+                            math_type: serverData[1]?.name || '',
+                            sub_3: serverData[3]?.name || '',
+                            sub_4: serverData[4]?.name || '',
+                            sub_5: serverData[5]?.name || '',
+                            sub_6: serverData[6]?.name || ''
+                        }
+                    };
+                    // Sync to user-specific local storage
+                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(savedData));
+                }
+            }
+        } catch (e) {
+            console.warn("Could not parse server subjects:", e);
+        }
+    }
+
+    // 2. If no server marks found or guest, check user-scoped local storage
+    if (!savedData || !savedData.marks || !savedData.marks.some(m => m !== '')) {
+        try {
+            let local = localStorage.getItem(USER_STORAGE_KEY);
+            if (!local) {
+                const legacyKey = "{% if user.is_authenticated %}edubridge_marks_user_{{ user.id }}{% else %}edubridge_marks_guest{% endif %}";
+                local = localStorage.getItem(legacyKey) || localStorage.getItem('edubridge_saved_marks');
+            }
+            if (local) {
+                savedData = JSON.parse(local);
+            }
+        } catch (e) {
+            console.warn("Could not read local storage:", e);
+        }
+    }
+
+    // 3. Fallback for guest checking server profile
+    if (!savedData || !savedData.marks || !savedData.marks.some(m => m !== '')) {
+        try {
+            const serverData = {{ saved_subjects_json|safe }};
+            if (serverData && Array.isArray(serverData) && serverData.length === 7) {
+                const marks = serverData.map(s => (s.mark !== undefined && s.mark !== null && s.mark !== '' && s.mark > 0) ? s.mark.toString() : '');
+                if (marks.some(m => m !== '')) {
+                    savedData = {
+                        marks: marks,
+                        dropdowns: {
+                            math_type: serverData[1]?.name || '',
+                            sub_3: serverData[3]?.name || '',
+                            sub_4: serverData[4]?.name || '',
+                            sub_5: serverData[5]?.name || '',
+                            sub_6: serverData[6]?.name || ''
+                        }
+                    };
+                }
+            }
+        } catch (e) {}
+    }
+
+    // 4. Populate inputs and recalculate
+    if (savedData && savedData.marks) {
+        if (savedData.dropdowns) {
+            const setIfPresent = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val) {
+                    for (let opt of el.options) {
+                        if (opt.value === val) {
+                            el.value = val;
+                            break;
+                        }
+                    }
+                }
+            };
+            setIfPresent('math_type', savedData.dropdowns.math_type);
+            setIfPresent('sub_3', savedData.dropdowns.sub_3);
+            setIfPresent('sub_4', savedData.dropdowns.sub_4);
+            setIfPresent('sub_5', savedData.dropdowns.sub_5);
+            setIfPresent('sub_6', savedData.dropdowns.sub_6);
+        }
+
+        let filledCount = 0;
+        for (let i = 0; i < 7; i++) {
+            const val = savedData.marks[i] || '';
+            const inp = document.getElementById(`mark_${i}`);
+            if (inp) {
+                inp.value = val;
+                if (val !== '') {
+                    filledCount++;
+                    onMarkInput(i);
+                }
+            }
+        }
+
+        if (filledCount > 0) {
+            // Silently calculate without jumping or alerting
+            calculateApsButton({ silent: true });
+        }
+    }
+}
+
+function clearAllMarks() {
+    for (let i = 0; i < 7; i++) {
+        const inp = document.getElementById(`mark_${i}`);
+        if (inp) inp.value = '';
+        const lvlBadge = document.getElementById(`level_${i}`);
+        if (lvlBadge) {
+            lvlBadge.innerText = 'L-';
+            lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800';
+        }
+    }
+    // Remove from user-scoped storage & legacy storage
+    localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem('edubridge_saved_marks');
+
+    // Also clear in backend database profile
+    fetch('/api/calculate-aps/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjects: [] })
+    }).catch(err => console.error(err));
+
+    document.getElementById('standardApsScore').innerText = '--';
+    document.getElementById('withLoApsScore').innerText = '--';
+    document.getElementById('passStatus').innerText = 'Enter your subject percentage marks below';
+    document.getElementById('breakdownBox').classList.add('hidden');
+    document.getElementById('eligibleCount').innerText = 'Awaiting Marks';
+    document.getElementById('eligibleList').innerHTML = `
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-center text-xs text-slate-400 space-y-1">
+            <p class="font-medium text-slate-300">Marks cleared.</p>
+            <p class="text-[11px]">Type your own percentage marks in the fields above and tap Calculate.</p>
+        </div>
+    `;
+    const btnText = document.getElementById('calcBtnText');
+    if (btnText) btnText.innerText = 'Calculate Standard APS & Total with LO';
+}
+
+function loadSampleMarks() {
+    const samples = [65, 62, 75, 68, 70, 58, 72];
+    for (let i = 0; i < 7; i++) {
+        const inp = document.getElementById(`mark_${i}`);
+        if (inp) inp.value = samples[i];
+        onMarkInput(i);
+    }
+    calculateApsButton();
+}
+
+// MAIN ACTION: Calculates Standard APS (excl LO) & Total with LO
+function calculateApsButton(options = {}) {
+    const silent = (options && options.silent === true);
+    const rawValues = [];
+    let enteredCount = 0;
+    const subjects = [
+        { name: "English HL / FAL", id: 0, is_lo: false },
+        { name: document.getElementById('math_type').value, id: 1, is_lo: false },
+        { name: "Life Orientation", id: 2, is_lo: true },
+        { name: document.getElementById('sub_3').value, id: 3, is_lo: false },
+        { name: document.getElementById('sub_4').value, id: 4, is_lo: false },
+        { name: document.getElementById('sub_5').value, id: 5, is_lo: false },
+        { name: document.getElementById('sub_6').value, id: 6, is_lo: false }
+    ];
+
+    const nonLoScores = [];
+    let loScore = 0;
+    let loMark = 0;
+
+    for (let i = 0; i < 7; i++) {
+        const valStr = document.getElementById(`mark_${i}`).value.trim();
+        const lvlBadge = document.getElementById(`level_${i}`);
+        if (valStr !== '') {
+            enteredCount++;
+            const val = parseFloat(valStr) || 0;
+            const clamped = Math.min(100, Math.max(0, val));
+            rawValues.push(clamped);
+            const lvl = getLevel(clamped) || 1;
+            
+            if (lvlBadge) {
+                lvlBadge.innerText = `L${lvl}`;
+                if (i === 2) {
+                    lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-amber-950 text-amber-400 border border-amber-800';
+                } else {
+                    lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-teal-950 text-teal-400 border border-teal-800';
+                }
+            }
+
+            if (i === 2) {
+                loScore = lvl;
+                loMark = clamped;
+            } else {
+                nonLoScores.push({ name: subjects[i].name, mark: clamped, level: lvl });
+            }
+        } else {
+            rawValues.push(0);
+            if (lvlBadge) {
+                lvlBadge.innerText = 'L-';
+                lvlBadge.className = 'text-xs font-bold px-2 py-1 rounded bg-slate-850 text-slate-500 border border-slate-800';
+            }
+            if (i !== 2) {
+                nonLoScores.push({ name: subjects[i].name, mark: 0, level: 0 });
+            }
+        }
+    }
+
+    // Persist immediately
+    saveMarksToStorage();
+
+    if (enteredCount === 0) {
+        if (!silent) {
+            alert("Please enter percentage marks (0-100%) for your subjects first, or tap '📝 Load Sample'!");
+        }
+        return;
+    }
+
+    // Sort non-LO scores descending
+    nonLoScores.sort((a, b) => b.level - a.level);
+    const top6NonLo = nonLoScores.slice(0, 6);
+    const standardAps = top6NonLo.reduce((sum, item) => sum + item.level, 0);
+    const totalWithLo = standardAps + loScore;
+
+    // Immediate DOM Update
+    const stdEl = document.getElementById('standardApsScore');
+    const loEl = document.getElementById('withLoApsScore');
+    stdEl.innerText = standardAps;
+    loEl.innerText = totalWithLo;
+
+    if (!silent) {
+        // Visual pulse effect on explicit user tap
+        stdEl.classList.add('scale-125', 'text-amber-300');
+        loEl.classList.add('scale-125', 'text-amber-300');
+        setTimeout(() => {
+            stdEl.classList.remove('scale-125', 'text-amber-300');
+            loEl.classList.remove('scale-125', 'text-amber-300');
+        }, 450);
+    }
+
+    // Update Breakdown Box
+    const stdLevelsStr = top6NonLo.map(s => `${s.name.split(' ')[0]}(L${s.level})`).join(' + ');
+    document.getElementById('stdCalcDetail').innerText = `${stdLevelsStr} = ${standardAps} points`;
+    document.getElementById('stdBadge').innerText = `${standardAps} pts`;
+    
+    document.getElementById('loCalcDetail').innerText = `Level ${loScore} (${loMark}%) = ${loScore} points`;
+    document.getElementById('loBadge').innerText = `+${loScore} pts`;
+
+    document.getElementById('totalLoDetail').innerText = `${standardAps} (Standard) + ${loScore} (LO) = ${totalWithLo} points`;
+
+    // Admission Pass Status
+    let passText = "🎓 Bachelor's Degree Pass (Eligible for Degree admission at Wits, UCT, UP, UJ, Stellenbosch)";
+    if (standardAps < 23) {
+        passText = "📜 Diploma Pass (Eligible for National Diploma admission at TUT, CPUT, DUT, etc.)";
+    }
+    if (standardAps < 19) {
+        passText = "🛠️ Higher Certificate / TVET Pass (Eligible for TVET Colleges & NC(V) Certificates)";
+    }
+    document.getElementById('passStatus').innerText = passText;
+
+    // Missing fields warning
+    const warnEl = document.getElementById('missingWarning');
+    if (enteredCount < 7) {
+        warnEl.innerText = `⚠️ Notice: You entered ${enteredCount} of 7 subjects. Blank subjects counted as 0 points. Enter all 7 NSC subjects for your full official matric APS.`;
+        warnEl.classList.remove('hidden');
+    } else {
+        warnEl.classList.add('hidden');
+    }
+
+    document.getElementById('breakdownBox').classList.remove('hidden');
+
+    // Update button text to give feedback
+    const btnText = document.getElementById('calcBtnText');
+    if (btnText && !silent) {
+        btnText.innerText = `✓ Calculated: ${standardAps} Std | ${totalWithLo} With LO`;
+        setTimeout(() => {
+            btnText.innerText = '⚡ Calculate Standard APS & Total with LO';
+        }, 3500);
+    }
+
+    // Smooth scroll to top scorecard only if explicitly clicked by user
+    if (!silent) {
+        document.getElementById('scorecardSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Send payload to backend to sync profile and fetch eligible university & TVET courses
+    const payload = {
+        subjects: [
+            { name: "English", mark: rawValues[0], is_lo: false },
+            { name: document.getElementById('math_type').value, mark: rawValues[1], is_lo: false },
+            { name: "Life Orientation", mark: rawValues[2], is_lo: true },
+            { name: document.getElementById('sub_3').value, mark: rawValues[3], is_lo: false },
+            { name: document.getElementById('sub_4').value, mark: rawValues[4], is_lo: false },
+            { name: document.getElementById('sub_5').value, mark: rawValues[5], is_lo: false },
+            { name: document.getElementById('sub_6').value, mark: rawValues[6], is_lo: false }
+        ]
+    };
+
+    fetch('/api/calculate-aps/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            lastServerTimestamp = Date.now();
+            const res = data.result;
+            // Ensure server sync
+            document.getElementById('standardApsScore').innerText = res.total_aps_standard;
+            document.getElementById('withLoApsScore').innerText = res.total_aps_with_lo;
+
+            const listEl = document.getElementById('eligibleList');
+            document.getElementById('eligibleCount').innerText = `${res.eligible_courses.length} Degrees / Diplomas`;
+            
+            if (res.eligible_courses.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-400 text-xs p-3">No university degree matches at current points. TVET College vocational certificate options available.</p>';
+            } else {
+                listEl.innerHTML = res.eligible_courses.map(c => `
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-[10px] text-teal-400 font-semibold uppercase">${c.faculty}</span>
+                                <h4 class="text-xs font-bold text-white">${c.title}</h4>
+                            </div>
+                            <span class="text-[11px] font-bold text-teal-300 bg-teal-950 px-2 py-0.5 rounded border border-teal-800">
+                                Min APS: ${c.min_aps}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">${c.description}</p>
+                        <div class="mt-2.5 pt-2 border-t border-slate-900 flex items-center justify-between">
+                            <div class="flex flex-wrap gap-1 text-[10px] text-slate-300">
+                                ${c.universities.map(u => `<span class="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">${u}</span>`).join('')}
+                            </div>
+                            <a href="/bursaries/" class="px-2.5 py-1 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-[10px] tap-scale">
+                                Apply Funding &rarr;
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    })
+    .catch(err => console.error("Recalculate error:", err));
+}
+
+function askAiAboutAps() {
+    const stdAps = document.getElementById('standardApsScore').innerText;
+    if (stdAps === '--' || stdAps === '0') {
+        alert("Please enter your percentage marks first to calculate your APS!");
+        return;
+    }
+    const mathType = document.getElementById('math_type').value;
+    const mathMark = document.getElementById('mark_1').value || '0';
+    const withLo = document.getElementById('withLoApsScore').innerText;
+    const prompt = `I calculated my South African APS score. My Standard APS is ${stdAps} (excluding LO), and Total with LO is ${withLo}. My ${mathType} mark is ${mathMark}%. What degrees or TVET programmes at Wits, UP, UCT, or UJ do you recommend for me, and what bursaries can I apply for?`;
+    
+    sessionStorage.setItem('pending_agent_prompt', prompt);
+    window.location.href = "{% url 'mobile_dashboard' %}";
+}
+
+// Setup input listeners to prevent polling overwrite while user is typing
+function setupInputTypingGuards() {
+    for (let i = 0; i < 7; i++) {
+        const inp = document.getElementById(`mark_${i}`);
+        if (inp) {
+            inp.addEventListener('focus', () => { isUserTyping = true; });
+            inp.addEventListener('blur', () => {
+                setTimeout(() => {
+                    const active = document.activeElement;
+                    isUserTyping = active && active.id && active.id.startsWith('mark_');
+                }, 200);
+            });
+        }
+    }
+}
+
+// Automatically restore marks and initialize sync engine
+function initApsCalculator() {
+    setupInputTypingGuards();
+    restoreSavedMarks();
+
+    // Start 3-second real-time sync polling
+    setInterval(checkServerForUpdates, 3000);
+
+    // Immediate check whenever user returns to or unlocks their phone screen
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkServerForUpdates();
+        }
+    });
+    window.addEventListener('focus', checkServerForUpdates);
+    window.addEventListener('pageshow', checkServerForUpdates);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApsCalculator);
+} else {
+    initApsCalculator();
+}
+</script>
+{% endblock %}

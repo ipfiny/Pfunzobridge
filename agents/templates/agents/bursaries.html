@@ -1,0 +1,528 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}Bursary &amp; NSFAS Tracker | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-semibold text-teal-400 bg-teal-950 px-2 py-0.5 rounded border border-teal-800/60 uppercase">
+                    Centralized Funding &amp; Deadlines
+                </span>
+                <h2 class="text-lg font-bold text-white mt-1">Bursaries &amp; NSFAS</h2>
+                <p class="text-xs text-slate-300">Apply directly to open bursaries with verified deadlines. Expired schemes are clearly marked to protect your applications.</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-lg shrink-0 ml-2">
+                💼
+            </div>
+        </div>
+
+        <!-- Quick Filter Chips -->
+        <div class="mt-3.5 pt-3 border-t border-slate-800 flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
+            <button onclick="filterStatus('all')" class="filter-pill px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-bold shrink-0">All Funding ({{ bursaries_with_status|length }})</button>
+            <button onclick="filterStatus('open')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 shrink-0 font-medium">🟢 Open Now ({{ open_count }})</button>
+            <button onclick="filterStatus('expired')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 shrink-0 font-medium">⛔ Closed ({{ closed_count }})</button>
+            <button onclick="filterCategory('Government')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 shrink-0 font-medium">Government (NSFAS/Funza)</button>
+            <button onclick="filterCategory('Corporate')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 shrink-0 font-medium">Corporate STEM</button>
+        </div>
+    </div>
+
+    <!-- Bursaries Catalog Cards -->
+    <div class="space-y-3" id="bursariesList">
+        {% for entry in bursaries_with_status %}
+        {% with b=entry.item tracker=entry.tracker is_exp=entry.is_expired status=entry.status_info %}
+        <div class="bursary-card rounded-2xl bg-slate-900 border {% if tracker and tracker.status == 'submitted' %}border-emerald-500/80 bg-slate-900/95{% elif is_exp %}border-slate-800 opacity-80{% else %}border-slate-800 hover:border-teal-700/60{% endif %} p-4 shadow-lg space-y-3" 
+            data-category="{{ b.category }}" 
+            data-status="{% if is_exp %}expired{% else %}open{% endif %}">
+            
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-[10px] font-semibold text-teal-400 uppercase tracking-wider block">{{ b.category }}</span>
+                        {% if tracker and tracker.status == 'submitted' %}
+                        <span class="text-[9px] bg-emerald-950 text-emerald-300 font-bold px-1.5 py-0.2 rounded border border-emerald-700">✓ Submitted</span>
+                        {% elif is_exp %}
+                        <span class="text-[9px] bg-rose-950 text-rose-400 font-bold px-1.5 py-0.2 rounded border border-rose-800/80">Closed</span>
+                        {% else %}
+                        <span class="text-[9px] bg-emerald-950 text-emerald-400 font-bold px-1.5 py-0.2 rounded border border-emerald-800/80">Active</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="text-sm font-bold text-white mt-0.5">{{ b.name }}</h3>
+                    <p class="text-xs text-slate-400">{{ b.provider }}</p>
+                </div>
+                <div class="text-right shrink-0 ml-2">
+                    {% if tracker and tracker.status == 'submitted' %}
+                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-1 rounded border border-emerald-700 block">
+                        ✓ In Review
+                    </span>
+                    <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Application Logged</span>
+                    {% elif is_exp %}
+                    <span class="text-[10px] font-bold text-rose-300 bg-rose-950/90 px-2 py-0.5 rounded border border-rose-800/70 block">
+                        ⛔ Closed: {{ b.deadline_text }}
+                    </span>
+                    <span class="text-[9px] text-rose-400 font-semibold mt-0.5 block">Deadline Passed</span>
+                    {% else %}
+                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-800/70 block">
+                        🟢 Closes: {{ b.deadline_text }}
+                    </span>
+                    <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Applications Open</span>
+                    {% endif %}
+                    <span class="text-[10px] text-slate-400 mt-1 block">Min APS: {{ b.minimum_aps }}</span>
+                </div>
+            </div>
+
+            <!-- Coverage Details -->
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs text-slate-300">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Coverage &amp; Benefits:</span>
+                {{ b.coverage_details }}
+            </div>
+
+            <!-- Eligible Fields -->
+            <p class="text-xs text-slate-400">
+                <strong class="text-slate-300">Eligible:</strong> {{ b.eligible_fields }}
+            </p>
+
+            <!-- Application Controls -->
+            <div class="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                
+                <!-- In-App Direct Apply Button -->
+                {% if tracker and tracker.status == 'submitted' %}
+                <span class="px-3.5 py-2 rounded-xl bg-emerald-950 border border-emerald-600/80 text-emerald-300 text-xs font-bold flex items-center space-x-1.5">
+                    <span>✓ Application Submitted</span>
+                </span>
+                {% elif is_exp %}
+                <!-- Disabled when expired -->
+                <div class="flex items-center space-x-1.5">
+                    <button type="button" disabled 
+                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 text-slate-500 text-xs font-bold border border-slate-700/60 cursor-not-allowed flex items-center space-x-1" 
+                        title="Applications for this funding scheme closed on {{ b.deadline_text }}">
+                        <span>⛔ Closed for 2026</span>
+                    </button>
+                    <button type="button" onclick="askAiAboutAlternatives('{{ b.name|escapejs }}')" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 tap-scale">
+                        Open Alternatives
+                    </button>
+                </div>
+                {% else %}
+                <!-- Enabled for active bursaries -->
+                <button type="button" onclick="openApplicationModal({{ b.id }}, '{{ b.name|escapejs }}', '{{ b.provider|escapejs }}', {{ b.minimum_aps }})" 
+                    class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 text-xs font-black shadow-lg shadow-teal-500/25 tap-scale flex items-center space-x-1.5">
+                    <span>🚀 Apply Now</span>
+                </button>
+                {% endif %}
+
+                <div class="flex items-center space-x-1.5">
+                    <!-- Tracking Checklist Toggle -->
+                    <button type="button" onclick="toggleBursary({{ b.id }})" 
+                        class="px-2.5 py-2 rounded-xl text-xs font-semibold transition tap-scale {% if tracker %}bg-teal-950 border border-teal-700 text-teal-300{% else %}bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700{% endif %}">
+                        {% if tracker %}✓ Tracked{% else %}+ Bookmark{% endif %}
+                    </button>
+
+                    {% if not is_exp %}
+                    <!-- Motivation Generator -->
+                    <button type="button" onclick="askAiAboutBursary('{{ b.name|escapejs }}')" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 tap-scale">
+                        Draft Motivation
+                    </button>
+                    {% endif %}
+
+                    {% if b.application_url %}
+                    <a href="{{ b.application_url }}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs border border-slate-700 tap-scale" title="Visit official government or sponsor website">
+                        Portal ↗
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Document Checklist if tracked -->
+            {% if tracker %}
+            <div class="mt-2 pt-2 border-t border-teal-900/60 bg-teal-950/20 p-2.5 rounded-xl">
+                <span class="text-[11px] font-bold text-teal-300 uppercase block mb-1.5">Application Documents Ready:</span>
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" onchange="updateChecklist({{ b.id }})" id="id_cert_{{ b.id }}" {% if tracker.has_certified_id %}checked{% endif %} class="rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0">
+                        <span>Certified ID Copy</span>
+                    </label>
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" onchange="updateChecklist({{ b.id }})" id="id_results_{{ b.id }}" {% if tracker.has_matric_results %}checked{% endif %} class="rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0">
+                        <span>Matric / Gr11 Marks</span>
+                    </label>
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" onchange="updateChecklist({{ b.id }})" id="id_income_{{ b.id }}" {% if tracker.has_proof_of_income %}checked{% endif %} class="rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0">
+                        <span>Proof of Income</span>
+                    </label>
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" onchange="updateChecklist({{ b.id }})" id="id_mot_{{ b.id }}" {% if tracker.has_motivation_letter %}checked{% endif %} class="rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0">
+                        <span>Motivation Letter</span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- IN-APP APPLICATION MODAL -->
+<div id="applicationModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div class="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+            <div>
+                <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">Official Application Submission</span>
+                <h3 class="text-base font-bold text-white mt-0.5" id="modalBursaryTitle">Applying for NSFAS</h3>
+                <p class="text-xs text-slate-400" id="modalProvider">Department of Higher Education</p>
+            </div>
+            <button onclick="closeApplicationModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center tap-scale">
+                ✕
+            </button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="directApplicationForm" onsubmit="handleApplicationSubmit(event)" class="space-y-3.5 text-xs">
+            <input type="hidden" id="app_bursary_id" value="">
+            <input type="hidden" id="app_program_name" value="">
+
+            <!-- Full Name & ID Number -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Full Legal Name *</label>
+                    <input type="text" id="app_applicant_name" required value="{{ profile.full_name }}" placeholder="e.g. Sipho Nkosi" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">South African ID Number *</label>
+                    <input type="text" id="app_id_number" required maxlength="13" value="{{ profile.id_number|default:'0602145890082' }}" placeholder="13-digit SA ID" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 font-mono focus:border-teal-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Phone & Email -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Cellphone Number *</label>
+                    <input type="tel" id="app_phone" required value="{{ profile.phone|default:'082 555 1234' }}" placeholder="082 123 4567" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Email Address</label>
+                    <input type="email" id="app_email" value="{{ profile.email }}" placeholder="student@gmail.com" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Province & High School -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Province *</label>
+                    <select id="app_province" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="Gauteng" {% if profile.province == 'Gauteng' %}selected{% endif %}>Gauteng</option>
+                        <option value="Limpopo" {% if profile.province == 'Limpopo' %}selected{% endif %}>Limpopo</option>
+                        <option value="Mpumalanga" {% if profile.province == 'Mpumalanga' %}selected{% endif %}>Mpumalanga</option>
+                        <option value="KwaZulu-Natal" {% if profile.province == 'KwaZulu-Natal' %}selected{% endif %}>KwaZulu-Natal</option>
+                        <option value="Western Cape" {% if profile.province == 'Western Cape' %}selected{% endif %}>Western Cape</option>
+                        <option value="Eastern Cape" {% if profile.province == 'Eastern Cape' %}selected{% endif %}>Eastern Cape</option>
+                        <option value="Free State" {% if profile.province == 'Free State' %}selected{% endif %}>Free State</option>
+                        <option value="North West" {% if profile.province == 'North West' %}selected{% endif %}>North West</option>
+                        <option value="Northern Cape" {% if profile.province == 'Northern Cape' %}selected{% endif %}>Northern Cape</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">High School Name</label>
+                    <input type="text" id="app_school_name" value="{{ profile.school_name }}" placeholder="e.g. Orlando West High" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- APS Score & Household Income -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Calculated APS Points</label>
+                    <input type="number" id="app_aps_score" value="{{ profile.calculated_aps|default:'32' }}" min="10" max="50" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-teal-300 font-bold focus:border-teal-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Combined Family Income *</label>
+                    <select id="app_household_income" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="Under R350,000 / SASSA Beneficiary">Under R350,000 / SASSA (Qualifies 100%)</option>
+                        <option value="R350,000 to R600,000 (Missing Middle)">R350,000 - R600,000 (ISFAP Missing Middle)</option>
+                        <option value="Above R600,000">Above R600,000</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- SASSA Checkbox -->
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="app_sassa" checked class="rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0">
+                    <span class="text-[11px] text-slate-200 font-medium">Household receives a SASSA Grant (Child Support / Pension / Disability)</span>
+                </label>
+            </div>
+
+            <!-- Required Verification Documents Checklist -->
+            <div class="p-3 rounded-xl bg-teal-950/30 border border-teal-900/60 space-y-1.5">
+                <span class="text-[10px] font-bold text-teal-300 uppercase block">Attached Documents Verification:</span>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="app_doc_id" checked class="rounded text-teal-500">
+                    <span class="text-[11px] text-slate-300">Certified South African ID / Smart Card attached</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="app_doc_results" checked class="rounded text-teal-500">
+                    <span class="text-[11px] text-slate-300">Official Matric Statement / Grade 11 Report attached</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="app_doc_income" checked class="rounded text-teal-500">
+                    <span class="text-[11px] text-slate-300">Proof of Household Income / SASSA Confirmation attached</span>
+                </label>
+            </div>
+
+            <!-- Motivation Statement -->
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-[11px] font-semibold text-slate-300">Applicant Motivation Statement</label>
+                    <button type="button" onclick="autoDraftMotivation()" class="text-[10px] text-teal-400 hover:text-teal-300 font-bold underline">
+                        Auto-Fill with AI Draft
+                    </button>
+                </div>
+                <textarea id="app_motivation" rows="3" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 placeholder-slate-500 focus:border-teal-500 focus:outline-none" placeholder="Briefly state why you need this funding and your career ambitions..."></textarea>
+            </div>
+
+            <!-- Submit Action -->
+            <div class="pt-2 flex items-center space-x-2">
+                <button type="button" onclick="closeApplicationModal()" class="w-1/3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold tap-scale">
+                    Cancel
+                </button>
+                <button type="submit" id="submitAppBtn" class="w-2/3 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black shadow-lg shadow-teal-500/30 tap-scale flex items-center justify-center space-x-2">
+                    <span id="submitAppText">Submit Application Directly</span>
+                    <span id="submitAppSpinner" class="hidden">
+                        <svg class="animate-spin h-4 w-4 text-slate-950" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        <!-- SUCCESS CONFIRMATION RECEIPT (Initially Hidden) -->
+        <div id="applicationSuccessReceipt" class="hidden space-y-4 text-center py-3">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-3xl font-black shadow-lg">
+                ✓
+            </div>
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 mb-1">
+                    Application Submitted Successfully
+                </span>
+                <h3 class="text-lg font-extrabold text-white" id="successProgramName">NSFAS Funding 2026</h3>
+                <p class="text-xs text-slate-300 mt-1">Your application has been received and queued in the official selection queue.</p>
+            </div>
+
+            <!-- Reference Number Card -->
+            <div class="p-4 rounded-2xl bg-slate-950 border border-teal-800/80 shadow-inner">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Official Reference Number:</span>
+                <span class="text-xl font-black text-teal-300 tracking-wider font-mono block mt-1" id="successRefNumber">
+                    EBSA-2026-894120
+                </span>
+                <span class="text-[10px] text-emerald-400 font-semibold block mt-1.5" id="successTimestamp">Submitted today</span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 text-left space-y-1">
+                <p>• <strong>Next Step:</strong> Documents are being vetted against DHET criteria.</p>
+                <p>• <strong>Status:</strong> Visible anytime under your <strong>Profile</strong> tab.</p>
+                <p>• <strong>SMS / Reference:</strong> Keep your reference number safe.</p>
+            </div>
+
+            <div class="flex flex-col space-y-2 pt-2">
+                <a href="{% url 'student_profile' %}" class="w-full py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs tap-scale">
+                    View in My Profile &rarr;
+                </a>
+                <button type="button" onclick="closeApplicationModal(); window.location.reload();" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold tap-scale">
+                    Done
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function filterStatus(status) {
+    const cards = document.querySelectorAll('.bursary-card');
+    const buttons = document.querySelectorAll('.filter-pill');
+
+    buttons.forEach(b => {
+        b.classList.remove('bg-teal-500', 'text-slate-950', 'font-bold');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+    });
+    event.target.classList.add('bg-teal-500', 'text-slate-950', 'font-bold');
+    event.target.classList.remove('bg-slate-800', 'text-slate-300');
+
+    cards.forEach(card => {
+        const itemStatus = card.getAttribute('data-status');
+        if (status === 'all' || itemStatus === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function filterCategory(cat) {
+    const cards = document.querySelectorAll('.bursary-card');
+    const buttons = document.querySelectorAll('.filter-pill');
+
+    buttons.forEach(b => {
+        b.classList.remove('bg-teal-500', 'text-slate-950', 'font-bold');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+    });
+    event.target.classList.add('bg-teal-500', 'text-slate-950', 'font-bold');
+    event.target.classList.remove('bg-slate-800', 'text-slate-300');
+
+    cards.forEach(card => {
+        const itemCat = card.getAttribute('data-category');
+        if (cat === 'all' || itemCat.toLowerCase().includes(cat.toLowerCase())) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function openApplicationModal(bursaryId, name, provider, minAps) {
+    document.getElementById('app_bursary_id').value = bursaryId || '';
+    document.getElementById('app_program_name').value = name || '';
+    document.getElementById('modalBursaryTitle').innerText = name || 'Direct Application';
+    document.getElementById('modalProvider').innerText = provider || 'Higher Education Funding';
+
+    // Show form, hide receipt
+    document.getElementById('directApplicationForm').classList.remove('hidden');
+    document.getElementById('applicationSuccessReceipt').classList.add('hidden');
+    document.getElementById('applicationModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeApplicationModal() {
+    document.getElementById('applicationModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function autoDraftMotivation() {
+    const bursaryName = document.getElementById('modalBursaryTitle').innerText;
+    const name = document.getElementById('app_applicant_name').value || 'an ambitious matriculant';
+    const aps = document.getElementById('app_aps_score').value || '32';
+    
+    document.getElementById('app_motivation').value = 
+        `I am applying for the ${bursaryName} to fund my undergraduate tertiary studies. Having achieved an Admission Point Score (APS) of ${aps}, I have demonstrated continuous academic diligence. My goal is to acquire high-impact technical and professional skills that contribute to South Africa's economic transformation. Due to financial constraints, this bursary will be pivotal in allowing me to complete my degree without financial disruption.`;
+}
+
+function handleApplicationSubmit(event) {
+    event.preventDefault();
+
+    const submitBtn = document.getElementById('submitAppBtn');
+    const submitText = document.getElementById('submitAppText');
+    const submitSpinner = document.getElementById('submitAppSpinner');
+
+    submitBtn.disabled = true;
+    submitText.innerText = "Submitting Application...";
+    submitSpinner.classList.remove('hidden');
+
+    const payload = {
+        bursary_id: document.getElementById('app_bursary_id').value,
+        program_name: document.getElementById('app_program_name').value,
+        applicant_name: document.getElementById('app_applicant_name').value,
+        id_number: document.getElementById('app_id_number').value,
+        phone: document.getElementById('app_phone').value,
+        email: document.getElementById('app_email').value,
+        province: document.getElementById('app_province').value,
+        school_name: document.getElementById('app_school_name').value,
+        aps_score: document.getElementById('app_aps_score').value,
+        household_income: document.getElementById('app_household_income').value,
+        is_sassa_recipient: document.getElementById('app_sassa').checked,
+        has_certified_id: document.getElementById('app_doc_id').checked,
+        has_academic_results: document.getElementById('app_doc_results').checked,
+        has_proof_of_income: document.getElementById('app_doc_income').checked,
+        motivation_text: document.getElementById('app_motivation').value
+    };
+
+    fetch('/api/submit-application/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitText.innerText = "Submit Application Directly";
+        submitSpinner.classList.add('hidden');
+
+        if (data.success) {
+            document.getElementById('directApplicationForm').classList.add('hidden');
+            document.getElementById('applicationSuccessReceipt').classList.remove('hidden');
+            document.getElementById('successProgramName').innerText = data.program_name;
+            document.getElementById('successRefNumber').innerText = data.reference_number;
+            document.getElementById('successTimestamp').innerText = `Submitted on ${data.submitted_at}`;
+        } else {
+            alert("Application Rejected: " + (data.error || "Unable to submit application"));
+        }
+    })
+    .catch(err => {
+        console.error("Submission error:", err);
+        submitBtn.disabled = false;
+        submitText.innerText = "Submit Application Directly";
+        submitSpinner.classList.add('hidden');
+        alert("Network or submission error: " + err.message);
+    });
+}
+
+function toggleBursary(bursaryId) {
+    fetch('/api/track-bursary/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bursary_id: bursaryId, action: 'toggle' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        }
+    })
+    .catch(err => console.error("Track toggle error:", err));
+}
+
+function updateChecklist(bursaryId) {
+    const payload = {
+        bursary_id: bursaryId,
+        action: 'update_checklist',
+        has_certified_id: document.getElementById(`id_cert_${bursaryId}`).checked,
+        has_matric_results: document.getElementById(`id_results_${bursaryId}`).checked,
+        has_proof_of_income: document.getElementById(`id_income_${bursaryId}`).checked,
+        has_motivation_letter: document.getElementById(`id_mot_${bursaryId}`).checked
+    };
+
+    fetch('/api/track-bursary/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .catch(err => console.error("Checklist update error:", err));
+}
+
+function askAiAboutBursary(name) {
+    const prompt = `Write a personalized motivation letter and checklist for applying to the ${name}. Include key points that appeal to their selection committee in South Africa.`;
+    sessionStorage.setItem('pending_agent_prompt', prompt);
+    window.location.href = "{% url 'mobile_dashboard' %}";
+}
+
+function askAiAboutAlternatives(name) {
+    const prompt = `The application deadline for ${name} has passed. What alternative South African bursaries and government funding (like NSFAS, ISFAP, or provincial schemes) are currently open right now that fund similar degrees?`;
+    sessionStorage.setItem('pending_agent_prompt', prompt);
+    window.location.href = "{% url 'mobile_dashboard' %}";
+}
+</script>
+{% endblock %}

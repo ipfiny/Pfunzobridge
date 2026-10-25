@@ -1,0 +1,63 @@
+# ==============================================================================
+# PfunzoBridge - Security & Environment Exclusions (.gitignore)
+# SSDLC Compliance: Prevents leaking secrets, databases, tokens & build files
+# ==============================================================================
+
+# Database & SQLite files (contains active user accounts, password hashes)
+*.sqlite3
+*.sqlite3-journal
+*.db
+db.sqlite3
+
+# Secrets, Environment Files & Keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+
+# Python Bytecode, Caches & Distribution
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Static collection output & user uploads
+staticfiles/
+media/
+uploads/
+
+# IDE, Editors & OS Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs, Diagnostics & Temp files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Personal archives, scraped artifacts & external dumps
+Sonke Platform*
+Sonke Platform - Ipfi Nyamande_files/
+*.pdf

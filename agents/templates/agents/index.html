@@ -1,0 +1,304 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}PfunzoBridge AI Counselor | Mobile Agent{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Hero Card -->
+    <div class="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/60 p-4 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex items-start justify-between">
+            <div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-950 text-teal-300 border border-teal-700/50 mb-1">
+                    Autonomous Agent Active
+                </span>
+                <h2 class="text-lg font-bold text-white tracking-tight">PfunzoBridge SA Advisor</h2>
+                <p class="text-xs text-slate-300 mt-0.5">Your personal guide for APS scores, university applications, TVET colleges, and NSFAS funding.</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-sm shrink-0 ml-2">
+                🤖
+            </div>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div class="mt-3.5 pt-3 border-t border-slate-700/60">
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Tap a Quick Prompt:</p>
+            <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="setPrompt('What is the NSFAS 2026 household income threshold and what documents do I need to apply?')" class="tap-scale px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 font-medium">
+                    🎓 NSFAS 2026 Rules
+                </button>
+                <button type="button" onclick="setPrompt('How is South African APS calculated, and does Life Orientation count?')" class="tap-scale px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 font-medium">
+                    📊 APS Score Guide
+                </button>
+                <button type="button" onclick="setPrompt('Write a strong bursary motivation letter template for a South African Grade 12 student.')" class="tap-scale px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 font-medium">
+                    ✍️ Motivation Letter
+                </button>
+                <button type="button" onclick="setPrompt('What are the highest-paying in-demand careers in South Africa right now?')" class="tap-scale px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 font-medium">
+                    🚀 High-Demand Careers
+                </button>
+                <button type="button" onclick="setPrompt('Can I study Computer Science or IT with Mathematical Literacy instead of Pure Maths?')" class="tap-scale px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 font-medium">
+                    💡 Maths Lit vs Pure Maths
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Authenticated Status Strip -->
+    {% if user.is_authenticated %}
+    <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400">
+        <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Logged in as <strong class="text-white">{{ user.username }}</strong></span>
+            {% if user.is_staff %}
+            <span class="text-[9px] bg-teal-950 text-teal-400 font-bold px-1.5 py-0.2 rounded border border-teal-800">Judge</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'logout' %}" class="text-slate-400 hover:text-rose-400 font-semibold text-[10px] transition">Log Out &rarr;</a>
+    </div>
+    {% endif %}
+
+    <!-- Agent Prompt Input Card -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <label for="prompt" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            Ask the Autonomous Agent
+        </label>
+        <textarea id="prompt" rows="3" 
+            class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-sm text-slate-100 placeholder-slate-500 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none transition" 
+            placeholder="E.g., What degrees can I study with 32 APS at Wits or UJ?"></textarea>
+        
+        <div class="mt-3 flex items-center space-x-2">
+            <button id="submit-btn" onclick="startAgent()" 
+                class="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 py-3.5 px-4 text-sm font-bold text-slate-950 shadow-lg shadow-teal-500/25 active:scale-[0.98] transition flex items-center justify-center space-x-2 touch-target">
+                <span id="btn-text">Run Agent Workflow</span>
+                <span id="btn-spinner" class="hidden">
+                    <svg class="animate-spin h-5 w-5 text-slate-950" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+            <button type="button" onclick="clearStream()" class="px-3.5 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-slate-700 tap-scale">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Execution Stream Output Panel -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-live-dot" id="status-indicator"></span>
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Agent Live Stream</h3>
+            </div>
+            <span id="stream-status" class="text-[11px] text-slate-400 font-mono">Idle</span>
+        </div>
+
+        <div id="output-wrapper" class="relative">
+            <div id="output" class="min-h-[140px] max-h-[460px] overflow-y-auto rounded-xl bg-slate-950 p-3.5 text-sm font-sans text-slate-200 border border-slate-800/80 leading-relaxed space-y-2">
+                <p class="text-slate-500 italic text-xs">Waiting for prompt... Select a quick prompt above or type your question.</p>
+            </div>
+        </div>
+
+        <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Powered by Google Antigravity &amp; PfunzoBridge Engine</span>
+            <button type="button" id="copy-btn" onclick="copyOutput()" class="text-teal-400 hover:text-teal-300 font-medium cursor-pointer tap-scale flex items-center space-x-1">
+                <span>📋</span>
+                <span id="copy-btn-text">Copy Text</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Agent Sessions -->
+    {% if recent_tasks %}
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Recent Agent Inquiries</h3>
+        <div class="space-y-2">
+            {% for t in recent_tasks %}
+            <a href="{% url 'task_detail' t.task_id %}" class="block p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 tap-scale">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-medium text-slate-200 truncate pr-2">{{ t.prompt }}</p>
+                    <span class="text-[10px] text-teal-400 font-semibold px-1.5 py-0.5 rounded bg-teal-950 border border-teal-800/50 shrink-0">
+                        {{ t.status }}
+                    </span>
+                </div>
+                <span class="text-[10px] text-slate-500 block mt-1">{{ t.created_at|date:"d M Y, H:i" }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+let rawAccumulatedOutput = "";
+
+function setPrompt(text) {
+    document.getElementById('prompt').value = text;
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+}
+
+function clearStream() {
+    document.getElementById('prompt').value = "";
+    document.getElementById('output').innerHTML = '<p class="text-slate-500 italic text-xs">Waiting for prompt... Select a quick prompt above or type your question.</p>';
+    document.getElementById('stream-status').innerText = 'Idle';
+    rawAccumulatedOutput = "";
+}
+
+function copyOutput() {
+    const outputDiv = document.getElementById('output');
+    let textToCopy = rawAccumulatedOutput;
+    if (!textToCopy && outputDiv) {
+        textToCopy = outputDiv.innerText.trim();
+    }
+
+    if (!textToCopy || textToCopy.startsWith("Waiting for prompt...")) {
+        showCopyFeedback("⚠️ No text to copy", false);
+        return;
+    }
+
+    // Try modern Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showCopyFeedback("✓ Copied to Clipboard!", true);
+        }).catch(() => {
+            fallbackCopyText(textToCopy);
+        });
+    } else {
+        fallbackCopyText(textToCopy);
+    }
+}
+
+function fallbackCopyText(text) {
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        textArea.setAttribute("readonly", "");
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) {
+            showCopyFeedback("✓ Copied to Clipboard!", true);
+        } else {
+            showCopyFeedback("⚠️ Copy failed", false);
+        }
+    } catch (err) {
+        console.error("Fallback copy error:", err);
+        showCopyFeedback("⚠️ Copy failed", false);
+    }
+}
+
+function showCopyFeedback(msg, isSuccess) {
+    const btnText = document.getElementById('copy-btn-text');
+    const copyBtn = document.getElementById('copy-btn');
+    if (!btnText || !copyBtn) return;
+    const originalText = btnText.innerText;
+    btnText.innerText = msg;
+    if (isSuccess) {
+        copyBtn.className = "text-emerald-300 font-bold text-xs bg-emerald-950/90 px-2.5 py-1 rounded-lg border border-emerald-700 transition-all flex items-center space-x-1 shadow";
+    } else {
+        copyBtn.className = "text-amber-300 font-bold text-xs bg-amber-950/90 px-2.5 py-1 rounded-lg border border-amber-700 transition-all flex items-center space-x-1 shadow";
+    }
+    setTimeout(() => {
+        btnText.innerText = originalText;
+        copyBtn.className = "text-teal-400 hover:text-teal-300 font-medium cursor-pointer tap-scale flex items-center space-x-1";
+    }, 2500);
+}
+
+function startAgent() {
+    const promptInput = document.getElementById('prompt');
+    const prompt = promptInput.value.trim();
+    const outputDiv = document.getElementById('output');
+    const btn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const streamStatus = document.getElementById('stream-status');
+
+    if (!prompt) {
+        alert("Please enter a question or prompt for the agent.");
+        return;
+    }
+
+    rawAccumulatedOutput = "";
+    outputDiv.innerHTML = '<div class="text-teal-400 text-xs font-mono animate-pulse">Initializing Antigravity Agent execution...</div>';
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    btnText.innerText = "Agent Thinking...";
+    btnSpinner.classList.remove('hidden');
+    streamStatus.innerText = "Streaming...";
+
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+
+    fetch('/run-agent-api/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned status: ${response.status}`);
+        }
+        outputDiv.innerHTML = "";
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        function readStream() {
+            reader.read().then(({ done, value }) => {
+                if (done) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    btnText.innerText = "Run Agent Workflow";
+                    btnSpinner.classList.add('hidden');
+                    streamStatus.innerText = "Completed";
+                    return;
+                }
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n\n");
+                
+                lines.forEach(line => {
+                    if (line.startsWith("data: ")) {
+                        const token = line.replace("data: ", "");
+                        if (token === "[DONE]") {
+                            streamStatus.innerText = "Completed";
+                        } else {
+                            rawAccumulatedOutput += token;
+                            if (window.marked) {
+                                outputDiv.innerHTML = marked.parse(rawAccumulatedOutput);
+                            } else {
+                                outputDiv.innerText = rawAccumulatedOutput;
+                            }
+                            // Auto-scroll to bottom of output panel
+                            outputDiv.scrollTop = outputDiv.scrollHeight;
+                        }
+                    }
+                });
+                readStream();
+            }).catch(err => {
+                console.error("Stream reader error:", err);
+                outputDiv.innerHTML += `<div class="text-rose-400 text-xs font-bold mt-2">Stream interrupted: ${err.message}</div>`;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                btnText.innerText = "Run Agent Workflow";
+                btnSpinner.classList.add('hidden');
+                streamStatus.innerText = "Error";
+            });
+        }
+        readStream();
+    }).catch(err => {
+        console.error("Fetch error:", err);
+        outputDiv.innerHTML = `<div class="text-rose-400 text-xs font-bold">Failed to connect to agent service: ${err.message}</div>`;
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        btnText.innerText = "Run Agent Workflow";
+        btnSpinner.classList.add('hidden');
+        streamStatus.innerText = "Error";
+    });
+}
+</script>
+{% endblock %}

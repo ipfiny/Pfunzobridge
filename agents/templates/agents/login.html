@@ -1,0 +1,550 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}Log In &amp; Access | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/80 p-5 shadow-xl text-center">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center font-black text-slate-950 text-2xl mx-auto shadow-lg shadow-teal-500/20 mb-3">
+            🔐
+        </div>
+        <h2 class="text-lg font-black text-white">PfunzoBridge Access</h2>
+        <p class="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
+            Log in to save your calculated APS, track bursary deadlines, and manage your higher education applications.
+        </p>
+    </div>
+
+    <!-- Hackathon Quick Demo Accounts (One-Tap Access) -->
+    <div class="rounded-2xl bg-teal-950/30 border border-teal-800/60 p-4 shadow-lg space-y-2.5">
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-teal-300 uppercase tracking-wider flex items-center space-x-1">
+                <span>⚡</span>
+                <span>FNB Hackathon One-Tap Demo Logins</span>
+            </span>
+            <span class="text-[9px] bg-teal-950 text-teal-400 font-semibold px-2 py-0.5 rounded border border-teal-800">Instant</span>
+        </div>
+        <p class="text-[11px] text-slate-300">Evaluate the system instantly with pre-configured judge or student accounts:</p>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="demo_judge">
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-teal-600/60 text-teal-300 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
+                    <span>👨‍⚖️ Judge Demo</span>
+                </button>
+            </form>
+
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="demo_student">
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-teal-600/60 text-teal-300 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
+                    <span>🧑‍🎓 Student Demo</span>
+                </button>
+            </form>
+
+            <form method="post" action="{% url 'login' %}" class="col-span-2 sm:col-span-1">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="quick_login_nyamande">
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-teal-900/80 hover:bg-teal-800 border border-teal-500/80 text-teal-200 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
+                    <span>📱 1-Tap Sync (Ipfi)</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Error Alert if any -->
+    {% if error_message %}
+    <div class="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-2">
+            <span>⚠️</span>
+            <span>{{ error_message }}</span>
+        </div>
+        <button type="button" onclick="openForgotModal('password')" class="text-teal-300 hover:text-white font-bold underline text-[11px] shrink-0 ml-2">
+            Forgot Password?
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Login / Register Tabs Container -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 shadow-lg space-y-4">
+        
+        <!-- Toggle Tabs -->
+        <div class="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-bold text-center">
+            <button type="button" id="tabLoginBtn" onclick="switchTab('login')" class="py-2 rounded-lg bg-teal-500 text-slate-950 transition cursor-pointer">
+                Sign In
+            </button>
+            <button type="button" id="tabRegisterBtn" onclick="switchTab('register')" class="py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
+                Create Account
+            </button>
+        </div>
+
+        <!-- 1. SIGN IN FORM -->
+        <form id="loginForm" method="post" action="{% url 'login' %}" class="space-y-3.5 text-xs">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="login">
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <!-- Username / Email Field -->
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-slate-300">Username or Email *</label>
+                    <button type="button" onclick="openForgotModal('username')" class="text-[10px] text-teal-400 hover:text-teal-300 font-semibold cursor-pointer">
+                        Forgot Username?
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="text" id="loginUsername" name="username" required placeholder="Enter username or email (e.g. nyamandeipfi@gmail.com)" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 pr-10 text-slate-100 focus:border-teal-500 focus:outline-none">
+                    <button type="button" onclick="clearInputField('loginUsername')" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-300 text-xs" title="Clear field">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Password Field with Visibility Button -->
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-slate-300">Password *</label>
+                    <button type="button" onclick="openForgotModal('password')" class="text-[10px] text-teal-400 hover:text-teal-300 font-bold underline-offset-2 hover:underline cursor-pointer">
+                        Forgot Password?
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="password" id="loginPassword" name="password" required placeholder="Enter your password" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 pr-11 text-slate-100 focus:border-teal-500 focus:outline-none">
+                    <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginEyeBtn')" id="loginEyeBtn" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-teal-300 transition cursor-pointer" 
+                        title="Make password visible" aria-label="Make password visible">
+                        <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Sign In -->
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-teal-500/25 tap-scale transition cursor-pointer">
+                Sign In to PfunzoBridge
+            </button>
+
+            <!-- Forgot Password / Username Quick Bar -->
+            <div class="pt-2 flex items-center justify-between text-[11px] border-t border-slate-800 text-slate-400">
+                <button type="button" onclick="openForgotModal('password')" class="text-teal-400 hover:text-teal-300 font-semibold flex items-center space-x-1 cursor-pointer">
+                    <span>🔑</span>
+                    <span>Forgot Password? Reset</span>
+                </button>
+                <button type="button" onclick="openForgotModal('username')" class="text-slate-400 hover:text-teal-300 font-medium flex items-center space-x-1 cursor-pointer">
+                    <span>🔍</span>
+                    <span>Find Username</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- 2. CREATE ACCOUNT FORM (Initially Hidden) -->
+        <form id="registerForm" method="post" action="{% url 'login' %}" class="hidden space-y-3 text-xs">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="register">
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Choose Username *</label>
+                    <input type="text" name="reg_username" required placeholder="e.g. sipho or email" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] font-semibold text-slate-300">Password *</label>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="regPassword" name="reg_password" required placeholder="min 6 chars" 
+                            class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 pr-10 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <button type="button" onclick="togglePasswordVisibility('regPassword', 'regEyeBtn')" id="regEyeBtn"
+                            class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-teal-300 transition cursor-pointer" 
+                            title="Make password visible" aria-label="Make password visible">
+                            <svg class="w-4 h-4 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Full Legal Name *</label>
+                <input type="text" name="reg_fullname" required placeholder="e.g. Sipho Dlamini" 
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Current Grade *</label>
+                    <select name="reg_grade" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="12">Grade 12 / Matric</option>
+                        <option value="11">Grade 11</option>
+                        <option value="10">Grade 10</option>
+                        <option value="matriculant">Matric Passed</option>
+                        <option value="tvet">TVET Applicant</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Province *</label>
+                    <select name="reg_province" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="Gauteng">Gauteng</option>
+                        <option value="Limpopo">Limpopo</option>
+                        <option value="Mpumalanga">Mpumalanga</option>
+                        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                        <option value="Western Cape">Western Cape</option>
+                        <option value="Eastern Cape">Eastern Cape</option>
+                        <option value="Free State">Free State</option>
+                        <option value="North West">North West</option>
+                        <option value="Northern Cape">Northern Cape</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">High School Name</label>
+                <input type="text" name="reg_school" placeholder="e.g. Orlando West High" 
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-teal-500/25 tap-scale transition cursor-pointer">
+                Create Free Account
+            </button>
+        </form>
+
+        <!-- Guest Access Link -->
+        <div class="pt-2 text-center border-t border-slate-800">
+            <a href="{% url 'mobile_dashboard' %}" class="text-[11px] text-slate-400 hover:text-teal-300 font-medium">
+                Continue as Guest Learner (No Login Required) &rarr;
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FORGOT PASSWORD & USERNAME RECOVERY MODAL -->
+<div id="forgotModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4 relative">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+                <span class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">🔑</span>
+                <h3 class="text-sm font-bold text-white">Account Recovery</h3>
+            </div>
+            <button type="button" onclick="closeForgotModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Sub-Tabs -->
+        <div class="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-bold text-center">
+            <button type="button" id="modalResetTabBtn" onclick="switchModalTab('reset')" class="py-2 rounded-lg bg-teal-500 text-slate-950 transition cursor-pointer">
+                Reset Password
+            </button>
+            <button type="button" id="modalFindTabBtn" onclick="switchModalTab('find')" class="py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer">
+                Find Username
+            </button>
+        </div>
+
+        <!-- 1. RESET PASSWORD PANEL -->
+        <div id="modalResetPanel" class="space-y-3 text-xs">
+            <p class="text-[11px] text-slate-300">
+                Enter your username or registered email and choose a new password:
+            </p>
+
+            <form id="resetPasswordForm" method="post" action="{% url 'login' %}" onsubmit="handleResetPasswordSubmit(event)" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Username or Email *</label>
+                    <input type="text" id="resetIdentifier" name="reset_identifier" required placeholder="e.g. nyamandeipfi@gmail.com or student" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] font-semibold text-slate-300">New Password *</label>
+                        <span class="text-[10px] text-slate-400">Min 4 characters</span>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="resetPassword" name="new_password" required placeholder="Enter new password" 
+                            class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 pr-10 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <button type="button" onclick="togglePasswordVisibility('resetPassword', 'resetEyeBtn')" id="resetEyeBtn"
+                            class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-teal-300 transition cursor-pointer" 
+                            title="Make password visible" aria-label="Make password visible">
+                            <svg class="w-4 h-4 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resetFeedback" class="hidden p-2.5 rounded-xl text-xs"></div>
+
+                <button type="submit" id="resetSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-lg tap-scale transition cursor-pointer">
+                    ⚡ Reset Password &amp; Sign In
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. FIND USERNAME PANEL -->
+        <div id="modalFindPanel" class="hidden space-y-3 text-xs">
+            <p class="text-[11px] text-slate-300">
+                Forgot which username you used? Enter your email address or full name to look it up:
+            </p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Your Email or Full Name</label>
+                    <input type="text" id="findQueryInput" placeholder="e.g. nyamandeipfi@gmail.com or Ipfi" 
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                </div>
+
+                <div id="findFeedback" class="hidden p-2.5 rounded-xl text-xs"></div>
+
+                <button type="button" onclick="performFindUsername()" id="findSubmitBtn" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-teal-600/70 text-teal-300 font-black text-xs shadow tap-scale transition cursor-pointer">
+                    🔍 Look Up My Username
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Toggle Password Visibility (Eye Icon Button)
+function togglePasswordVisibility(inputId, btnId) {
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!inp) return;
+
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        if (btn) {
+            btn.innerHTML = `
+                <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+            `;
+            btn.title = "Hide password";
+        }
+    } else {
+        inp.type = 'password';
+        if (btn) {
+            btn.innerHTML = `
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            `;
+            btn.title = "Make password visible";
+        }
+    }
+}
+
+// Clear input field helper
+function clearInputField(inputId) {
+    const el = document.getElementById(inputId);
+    if (el) {
+        el.value = '';
+        el.focus();
+    }
+}
+
+// Main Tab Switcher (Sign In vs Create Account)
+function switchTab(tab) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const tabLoginBtn = document.getElementById('tabLoginBtn');
+    const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+    if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        tabLoginBtn.className = 'py-2 rounded-lg bg-teal-500 text-slate-950 font-bold transition cursor-pointer';
+        tabRegisterBtn.className = 'py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer';
+    } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        tabRegisterBtn.className = 'py-2 rounded-lg bg-teal-500 text-slate-950 font-bold transition cursor-pointer';
+        tabLoginBtn.className = 'py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer';
+    }
+}
+
+// Forgot Password / Username Modal Handlers
+function openForgotModal(preferredTab = 'password') {
+    const modal = document.getElementById('forgotModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Pre-fill identifier if user typed into login form
+        const currentLoginUser = document.getElementById('loginUsername')?.value.trim();
+        if (currentLoginUser) {
+            document.getElementById('resetIdentifier').value = currentLoginUser;
+            document.getElementById('findQueryInput').value = currentLoginUser;
+        }
+        if (preferredTab === 'username') {
+            switchModalTab('find');
+        } else {
+            switchModalTab('reset');
+        }
+    }
+}
+
+function closeForgotModal() {
+    const modal = document.getElementById('forgotModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function switchModalTab(tab) {
+    const resetPanel = document.getElementById('modalResetPanel');
+    const findPanel = document.getElementById('modalFindPanel');
+    const resetTabBtn = document.getElementById('modalResetTabBtn');
+    const findTabBtn = document.getElementById('modalFindTabBtn');
+
+    if (tab === 'reset') {
+        resetPanel.classList.remove('hidden');
+        findPanel.classList.add('hidden');
+        resetTabBtn.className = 'py-2 rounded-lg bg-teal-500 text-slate-950 font-bold transition cursor-pointer';
+        findTabBtn.className = 'py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer';
+    } else {
+        resetPanel.classList.add('hidden');
+        findPanel.classList.remove('hidden');
+        findTabBtn.className = 'py-2 rounded-lg bg-teal-500 text-slate-950 font-bold transition cursor-pointer';
+        resetTabBtn.className = 'py-2 rounded-lg text-slate-400 hover:text-white transition cursor-pointer';
+    }
+}
+
+// Instant AJAX Password Reset
+function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    const identifier = document.getElementById('resetIdentifier').value.trim();
+    const newPassword = document.getElementById('resetPassword').value.trim();
+    const feedback = document.getElementById('resetFeedback');
+    const btn = document.getElementById('resetSubmitBtn');
+
+    if (!identifier || !newPassword) {
+        feedback.innerText = "Please fill in both fields.";
+        feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950/80 border border-rose-800 text-rose-300 block";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Resetting Password...";
+
+    fetch('/api/forgot-password/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'reset_password',
+            identifier: identifier,
+            new_password: newPassword
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerText = "⚡ Reset Password & Sign In";
+
+        if (data.success) {
+            feedback.innerHTML = `✓ <strong>${data.message}</strong> Redirecting...`;
+            feedback.className = "p-2.5 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-300 block";
+            setTimeout(() => {
+                window.location.href = "{% url 'mobile_dashboard' %}";
+            }, 1000);
+        } else {
+            feedback.innerText = data.error || "Reset failed. Please check username or create an account.";
+            feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950/80 border border-rose-800 text-rose-300 block";
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerText = "⚡ Reset Password & Sign In";
+        // Fallback to standard form post
+        document.getElementById('resetPasswordForm').submit();
+    });
+}
+
+// Instant Username Lookup
+function performFindUsername() {
+    const query = document.getElementById('findQueryInput').value.trim();
+    const feedback = document.getElementById('findFeedback');
+    const btn = document.getElementById('findSubmitBtn');
+
+    if (!query) {
+        feedback.innerText = "Please enter an email or full name to search.";
+        feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950/80 border border-rose-800 text-rose-300 block";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Searching Accounts...";
+
+    fetch('/api/forgot-password/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'find_username',
+            query: query
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerText = "🔍 Look Up My Username";
+
+        if (data.success && data.results && data.results.length > 0) {
+            feedback.className = "p-3 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-200 block space-y-2";
+            feedback.innerHTML = `
+                <div class="font-bold text-white">✓ Found matching account(s):</div>
+                <div class="space-y-1.5">
+                    ${data.results.map(u => `
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-emerald-700/60">
+                            <div>
+                                <span class="font-bold text-teal-300 block font-mono">${u.username}</span>
+                                <span class="text-[10px] text-slate-400">${u.full_name}</span>
+                            </div>
+                            <button type="button" onclick="selectFoundUsername('${u.username}')" class="px-2.5 py-1 rounded bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-[10px] tap-scale">
+                                Use to Sign In &rarr;
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            feedback.innerText = data.error || "No matching username found.";
+            feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950/80 border border-rose-800 text-rose-300 block";
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerText = "🔍 Look Up My Username";
+        feedback.innerText = "Lookup failed. Please check network or try signing in.";
+        feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950/80 border border-rose-800 text-rose-300 block";
+    });
+}
+
+// Select a found username and prepare sign in
+function selectFoundUsername(uname) {
+    closeForgotModal();
+    switchTab('login');
+    const uInp = document.getElementById('loginUsername');
+    if (uInp) uInp.value = uname;
+    const pInp = document.getElementById('loginPassword');
+    if (pInp) pInp.focus();
+}
+</script>
+{% endblock %}
