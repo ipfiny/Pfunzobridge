@@ -47,34 +47,6 @@
             🔄 Sync Now
         </button>
     </div>
-    {% else %}
-    <div id="syncStatusBar" class="rounded-2xl bg-gradient-to-r from-amber-950/90 via-slate-900 to-slate-950 border border-amber-800/80 p-3.5 shadow-md space-y-2.5">
-        <div class="flex items-start space-x-2.5">
-            <span class="text-xl shrink-0">📱</span>
-            <div>
-                <div class="flex items-center space-x-1.5">
-                    <h3 class="text-xs font-bold text-amber-300">Device in Guest Mode (Not Synced with Laptop)</h3>
-                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-400 font-bold border border-amber-800/60">Local Only</span>
-                </div>
-                <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                    Your laptop is signed in to <strong class="text-white">nyamandeipfi@gmail.com</strong>. To automatically mirror marks between laptop and phone in real-time, connect this device:
-                </p>
-            </div>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-            <form method="POST" action="{% url 'login' %}?next={% url 'aps_calculator' %}" class="inline">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="quick_login_nyamande">
-                <button type="submit" class="px-3.5 py-2 rounded-xl bg-teal-400 hover:bg-teal-300 active:scale-95 text-slate-950 font-black text-xs shadow-lg shadow-teal-950/60 flex items-center space-x-1.5 cursor-pointer transition-all">
-                    <span>⚡</span>
-                    <span>1-Tap Connect (nyamandeipfi@gmail.com)</span>
-                </button>
-            </form>
-            <a href="{% url 'login' %}?next={% url 'aps_calculator' %}" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 tap-scale">
-                Sign In With Password &rarr;
-            </a>
-        </div>
-    </div>
     {% endif %}
 
     <!-- Live APS Scorecard Display -->
