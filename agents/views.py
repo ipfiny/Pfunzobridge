@@ -497,12 +497,18 @@ def login_view(request):
             user = User.objects.filter(username='nyamandeipfi@gmail.com').first()
             if not user:
                 user = User.objects.filter(email__iexact='nyamandeipfi@gmail.com').first()
-            if user:
-                login(request, user)
-                seed_demo_profile(f"user_{user.id}", user.username)
-                migrate_session_marks(request, user)
-                messages.success(request, f"✓ Synced! Logged in as {user.username}. Phone & laptop are now connected.")
-                return redirect(next_url)
+            if not user:
+                user = User.objects.create_user(
+                    username='nyamandeipfi@gmail.com',
+                    email='nyamandeipfi@gmail.com',
+                    first_name='Ipfi',
+                    last_name='Nyamande'
+                )
+            login(request, user)
+            seed_demo_profile(f"user_{user.id}", user.username)
+            migrate_session_marks(request, user)
+            messages.success(request, f"✓ Synced! Logged in as {user.username}. Phone & laptop are now connected.")
+            return redirect(next_url)
 
         # Standard Credentials Login (supports Username or Email)
         elif action == 'login':
