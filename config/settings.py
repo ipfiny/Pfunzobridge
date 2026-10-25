@@ -30,7 +30,21 @@ ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS')
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',') if h.strip()]
 else:
-    ALLOWED_HOSTS = ['*'] if DEBUG else ['localhost', '127.0.0.1']
+    ALLOWED_HOSTS = ['*'] if DEBUG else ['localhost', '127.0.0.1', '.onrender.com']
+
+# CSRF Trusted Origins (Render and local HTTPS/HTTP reverse proxies)
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS')
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in CSRF_TRUSTED_ORIGINS_ENV.split(',') if o.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.onrender.com',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+# Render SSL Proxy Header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Production Security Hardening (SSDLC Compliance)
 if not DEBUG:
@@ -64,6 +78,21 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configure WhiteNoise for production static file serving on Render
+try:
+    import whitenoise  # noqa: F401
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+except ImportError:
+    pass
 
 ROOT_URLCONF = 'config.urls'
 
