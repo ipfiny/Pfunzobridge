@@ -50,7 +50,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
     # 1. Motivation Letters & Appeal Essays (High Priority - Must be checked BEFORE general bursaries)
     if any(k in cleaned_prompt for k in ['motivation', 'letter', 'appeal', 'essay']):
         thought = (
-            "### ✍️ Official South African Bursary Motivation Letter Template\n\n"
+            "### Official South African Bursary Motivation Letter Template\n\n"
             "Here is a proven, high-impact template designed for South African bursary committees (Sasol, ISFAP, Funza Lushaka, corporate schemes):\n\n"
             "---\n\n"
             "**[Your Full Name]**  \n"
@@ -79,7 +79,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             "Grade 12 Learner | Aspiring [Target Career, e.g. Software Engineer]  \n"
             "Contact: [Your Phone] | [Your Email]  \n\n"
             "---\n\n"
-            "💡 **Top 4 Tips to Stand Out to Bursary Committees:**\n"
+            "**Top 4 Tips to Stand Out to Bursary Committees:**\n"
             "1. **Fill in all bracketed fields `[...]`** with your true details before submitting.\n"
             "2. **Highlight exact numbers:** State your exact APS and high marks in Pure Maths, Science, or Accounting.\n"
             "3. **Show community leadership:** Mention any school clubs, sport, tutoring, or church volunteering.\n"
@@ -92,9 +92,9 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
         reach = [c for c in SA_DEGREE_CATALOG if target_aps < c["min_aps"] <= (target_aps + 3)]
 
         thought = (
-            f"### 🎯 Tailored Academic Evaluation: Standard APS {target_aps}\n\n"
+            f"### Tailored Academic Evaluation: Standard APS {target_aps}\n\n"
             f"Great news! With an Admission Point Score of **{target_aps}**, here is your personalized university and bursary breakdown:\n\n"
-            f"#### 🏛️ Direct University Degree Matches:\n"
+            f"#### Direct University Degree Matches:\n"
         )
         if eligible:
             for c in eligible[:4]:
@@ -106,12 +106,12 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             thought += "- *Diploma & TVET Vocational pathways offer immediate admission at this score level.*\n"
 
         if reach:
-            thought += f"\n#### ⚡ Close Reach / Competitive Programmes:\n"
+            thought += f"\n#### Close Reach / Competitive Programmes:\n"
             for c in reach[:2]:
                 thought += f"- **{c['title']}** (Min APS: {c['min_aps']} — just {c['min_aps'] - target_aps} points away!)\n"
 
         thought += (
-            f"\n#### 💼 High-Value Bursaries You Can Apply For:\n"
+            f"\n#### High-Value Bursaries You Can Apply For:\n"
             f"- **NSFAS:** 100% full tuition, R1,650/month living stipend, accommodation & laptop funding (Household income < R350k).\n"
         )
         if target_aps >= 34:
@@ -123,13 +123,13 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             thought += f"- **Funza Lushaka Bursary:** 100% funding for Bachelor of Education (Teaching) degrees.\n"
 
         thought += (
-            f"\n💡 *Next Steps:* Apply early through university portals before **30 September / 31 October** deadlines. Check our **Bursaries** tab to bookmark these schemes!"
+            f"\n*Next Steps:* Apply early through university portals before **30 September / 31 October** deadlines. Check our **Bursaries** tab to bookmark these schemes!"
         )
 
     # 3. Pure Maths vs Maths Literacy
     elif any(k in cleaned_prompt for k in ['maths lit', 'math literacy', 'mathematical literacy', 'pure maths', 'pure mathematics']):
         thought = (
-            "### 📐 Pure Mathematics vs Mathematical Literacy: Higher Education Impact\n\n"
+            "### Pure Mathematics vs Mathematical Literacy: Higher Education Impact\n\n"
             "Choosing between Pure Maths and Maths Lit is one of the most critical decisions for South African learners:\n\n"
             "**1. Fields That STRICTLY Require Pure Mathematics:**\n"
             "- **Engineering (BSc/BEng):** Electrical, Civil, Mechanical, Mechatronics (Requires Pure Maths Level 5-6 / 60-70%+).\n"
@@ -142,13 +142,13 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             "- **Nursing & Emergency Care:** Provincial nursing colleges accept Maths Lit with Life Sciences (50%+).\n"
             "- **Bachelor of Education (B.Ed):** Primary school & humanities high school teaching accept Maths Lit.\n"
             "- **Business Management, HR, Logistics, Marketing:** National Diplomas and BBA degrees accept Maths Lit.\n\n"
-            "💡 *Strategic Advice:* If taking Maths Lit, aim for **Level 5 or 6 (60% - 79%)** to maximize your APS and keep diploma/degree doors wide open!"
+            "*Strategic Advice:* If taking Maths Lit, aim for **Level 5 or 6 (60% - 79%)** to maximize your APS and keep diploma/degree doors wide open!"
         )
 
     # 4. Matric Upgrading & Second Chance
     elif any(k in cleaned_prompt for k in ['upgrade', 'rewrite', 'second chance', 'failed', 'supplementary', 'improve']):
         thought = (
-            "### 🔄 Second Chance Matric & Marks Upgrade Guide\n\n"
+            "### Second Chance Matric & Marks Upgrade Guide\n\n"
             "If your matric marks did not meet your dream university degree cutoffs, do not lose hope! South Africa provides clear, official upgrade pathways:\n\n"
             "**1. DBE Second Chance Matric Programme (Free Government Support):**\n"
             "- The Department of Basic Education offers **free face-to-face tuition, study guides, and past exam packs** for learners upgrading subjects.\n"
@@ -159,7 +159,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             "**3. TVET NC(V) Alternative (Fast-Track to Employment):**\n"
             "- Public TVET colleges accept learners with Grade 9, 10, 11, or 12 into **NC(V) Level 2-4 and N-Diploma** programs.\n"
             "- These qualifications are 100% funded by NSFAS and lead directly to Red-Seal Artisan trades (Electrician, Boiler Maker, Millwright, IT Technician).\n\n"
-            "💡 *Tip:* You can upgrade 1 or 2 critical subjects (like Pure Maths or Physical Sciences) while completing a TVET certificate simultaneously!"
+            "*Tip:* You can upgrade 1 or 2 critical subjects (like Pure Maths or Physical Sciences) while completing a TVET certificate simultaneously!"
         )
 
     # 5. Career Guidance Quiz Archetype Match
@@ -175,7 +175,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             arch_title = "Visionary Entrepreneur & Commercial Leader (Business & Tech)"
 
         thought = (
-            f"### 🧭 Action Plan for Your Career Profile: {arch_title}\n\n"
+            f"### Action Plan for Your Career Profile: {arch_title}\n\n"
             f"Based on your vocational match from the PfunzoBridge Career Quiz, here is your roadmap:\n\n"
             f"**1. Recommended Matric Subject Focus:**\n"
             f"- Maintain consistent marks in English (Compulsory Level 4+).\n"
@@ -186,13 +186,13 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             f"**3. Funding Checklist:**\n"
             f"- Apply for NSFAS as early as September.\n"
             f"- Check industry-specific corporate bursaries in our **Bursaries** tab.\n\n"
-            f"💡 *Tip: Head to our **APS Calculator** tab to enter your exact subject marks and verify your point standing for this career pathway!*"
+            f"*Tip: Head to our **APS Calculator** tab to enter your exact subject marks and verify your point standing for this career pathway!*"
         )
 
     # 6. NSFAS & Financial Aid
     elif any(k in cleaned_prompt for k in ['nsfas', 'financial aid']):
         thought = (
-            "### 🎓 PfunzoBridge Funding Intelligence: NSFAS 2026/2027 Guidelines\n\n"
+            "### PfunzoBridge Funding Intelligence: NSFAS 2026/2027 Guidelines\n\n"
             "**Key NSFAS Eligibility Criteria:**\n"
             "- **Household Income Threshold:** Combined gross family income must not exceed **R350,000 per annum** (or **R600,000** for students with a recognized disability).\n"
             "- **SASSA Beneficiaries:** If you or your parents receive a SASSA grant (e.g. Child Support Grant), you qualify **automatically** with no financial vetting required!\n"
@@ -211,7 +211,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
     # 7. Bursary Inquiries (General directory / listings)
     elif any(k in cleaned_prompt for k in ['bursary', 'bursaries', 'sasol', 'allan gray', 'isfap', 'funza', 'funding']):
         thought = (
-            "### 💼 South African High-Value Bursary Advisory\n\n"
+            "### South African High-Value Bursary Advisory\n\n"
             "Top funding opportunities open for South African learners:\n\n"
             "1. **Funza Lushaka Bursary:**\n"
             "   - *Covers:* 100% tuition, meals, accommodation & stipend for B.Ed degrees.\n"
@@ -230,7 +230,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
     # 8. APS General Strategy Guide
     elif any(k in cleaned_prompt for k in ['aps', 'score', 'points', 'calculate', 'marks', 'level']):
         thought = (
-            "### 📊 South African APS (Admission Point Score) Strategy Guide\n\n"
+            "### South African APS (Admission Point Score) Strategy Guide\n\n"
             "Your Admission Point Score (APS) is calculated using the **7-point NSC achievement scale**:\n"
             "- **Level 7 (80% - 100%):** 7 Points\n"
             "- **Level 6 (70% - 79%):** 6 Points\n"
@@ -243,25 +243,25 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
             "- **Wits, UCT, UP, UKZN:** Top 6 subjects **excluding Life Orientation**.\n"
             "- **UJ (University of Johannesburg):** Includes Life Orientation (scaled to 1-4 points depending on faculty).\n"
             "- **Minimum Pass Levels for Degree Study:** Bachelor's endorsement requires minimum Level 4 (50%+) in 4 designated subjects and minimum Level 3 in English.\n\n"
-            "💡 *Tip: Head to our built-in **APS Calculator** tab below to enter your exact subjects and see which degrees you qualify for instantly!*"
+            "*Tip: Head to our built-in **APS Calculator** tab below to enter your exact subjects and see which degrees you qualify for instantly!*"
         )
 
     # 9. In-Demand Careers & High-Growth Sectors
     elif any(k in cleaned_prompt for k in ['career', 'tvet', 'university', 'job', 'salary', 'salaries']):
         thought = (
-            "### 🚀 South African Career Pathways & In-Demand Sectors\n\n"
+            "### South African Career Pathways & In-Demand Sectors\n\n"
             "According to the latest DHET National List of Occupations in High Demand (OIHD):\n\n"
             "- **Tech & Innovation:** Software Engineering, Cloud Computing, Cybersecurity, Mobile Development (Average starting salary: R25,000 - R40,000/mo).\n"
             "- **Engineering & Green Energy:** Solar/Wind Technicians, Electrical Engineers, Mechatronics.\n"
             "- **Healthcare:** Professional Nurses, Clinical Associates, Biomedical Technologists.\n"
             "- **TVET Artisans:** Electricians, Millwrights, Welders, Toolmakers (Red-Seal qualification offers rapid employment with high demand).\n\n"
-            "🎯 *Use our **Career Quiz** tab to discover your vocational archetype and personalized pathway!*"
+            "*Use our **Career Quiz** tab to discover your vocational archetype and personalized pathway!*"
         )
 
     # 10. General Counselor Guidance
     else:
         thought = (
-            f"### 🤖 PfunzoBridge SA Agent Counselor\n\n"
+            f"### PfunzoBridge SA Agent Counselor\n\n"
             f"Thank you for reaching out regarding: *\"{prompt.strip()}\"*\n\n"
             "As your dedicated South African Education Guide, here is how we can assist you:\n\n"
             "1. **APS Calculation:** Calculate your exact Admission Point Score according to DBE and university rules.\n"

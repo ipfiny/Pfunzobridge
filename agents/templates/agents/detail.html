@@ -34,8 +34,8 @@
     <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
         <div class="flex items-center justify-between mb-2">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Agent Execution Output</h3>
-            <button type="button" id="detail-copy-btn" onclick="copyDetailText()" class="text-teal-400 hover:text-teal-300 text-xs font-semibold flex items-center space-x-1 cursor-pointer tap-scale">
-                <span>📋</span>
+            <button type="button" id="detail-copy-btn" onclick="copyDetailText()" class="text-teal-400 hover:text-teal-300 text-xs font-semibold flex items-center space-x-1.5 cursor-pointer tap-scale">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                 <span id="detail-copy-text">Copy Text</span>
             </button>
         </div>
@@ -56,7 +56,7 @@ function copyDetailText() {
 
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(textToCopy).then(() => {
-            showDetailCopyFeedback("✓ Copied!", true);
+            showDetailCopyFeedback("Copied!", true);
         }).catch(() => {
             fallbackDetailCopy(textToCopy);
         });
@@ -77,9 +77,9 @@ function fallbackDetailCopy(text) {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        showDetailCopyFeedback("✓ Copied!", true);
+        showDetailCopyFeedback("Copied!", true);
     } catch (e) {
-        showDetailCopyFeedback("⚠️ Failed", false);
+        showDetailCopyFeedback("Copy failed", false);
     }
 }
 

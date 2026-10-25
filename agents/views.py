@@ -507,7 +507,7 @@ def login_view(request):
             login(request, user)
             seed_demo_profile(f"user_{user.id}", user.username)
             migrate_session_marks(request, user)
-            messages.success(request, f"✓ Synced! Logged in as {user.username}. Phone & laptop are now connected.")
+            messages.success(request, f"Synced! Logged in as {user.username}. Phone & laptop are now connected.")
             return redirect(next_url)
 
         # Standard Credentials Login (supports Username or Email)
@@ -549,7 +549,7 @@ def login_view(request):
                     user.save()
                     login(request, user)
                     seed_demo_profile(f"user_{user.id}", user.username)
-                    messages.success(request, f"✓ Password successfully reset for {user.username}! You are now logged in.")
+                    messages.success(request, f"Password successfully reset for {user.username}! You are now logged in.")
                     return redirect(next_url)
                 else:
                     error_message = f"No account found with username or email '{identifier}'. Please check spelling or create an account."

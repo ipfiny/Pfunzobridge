@@ -15,16 +15,22 @@
                 <h2 class="text-lg font-bold text-white mt-1">Bursaries &amp; NSFAS</h2>
                 <p class="text-xs text-slate-300">Apply directly to open bursaries with verified deadlines. Expired schemes are clearly marked to protect your applications.</p>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-lg shrink-0 ml-2">
-                💼
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold shrink-0 ml-2 border border-teal-500/30">
+                <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
         </div>
 
         <!-- Quick Filter Chips -->
         <div class="mt-3.5 pt-3 border-t border-slate-800 flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
             <button onclick="filterStatus('all')" class="filter-pill px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-bold shrink-0">All Funding ({{ bursaries_with_status|length }})</button>
-            <button onclick="filterStatus('open')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 shrink-0 font-medium">🟢 Open Now ({{ open_count }})</button>
-            <button onclick="filterStatus('expired')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 shrink-0 font-medium">⛔ Closed ({{ closed_count }})</button>
+            <button onclick="filterStatus('open')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 shrink-0 font-medium flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Open Now ({{ open_count }})</span>
+            </button>
+            <button onclick="filterStatus('expired')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 shrink-0 font-medium flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span>Closed ({{ closed_count }})</span>
+            </button>
             <button onclick="filterCategory('Government')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 shrink-0 font-medium">Government (NSFAS/Funza)</button>
             <button onclick="filterCategory('Corporate')" class="filter-pill px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 shrink-0 font-medium">Corporate STEM</button>
         </div>
@@ -43,7 +49,10 @@
                     <div class="flex items-center space-x-1.5">
                         <span class="text-[10px] font-semibold text-teal-400 uppercase tracking-wider block">{{ b.category }}</span>
                         {% if tracker and tracker.status == 'submitted' %}
-                        <span class="text-[9px] bg-emerald-950 text-emerald-300 font-bold px-1.5 py-0.2 rounded border border-emerald-700">✓ Submitted</span>
+                        <span class="text-[9px] bg-emerald-950 text-emerald-300 font-bold px-1.5 py-0.2 rounded border border-emerald-700 inline-flex items-center space-x-1">
+                            <svg class="w-2.5 h-2.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            <span>Submitted</span>
+                        </span>
                         {% elif is_exp %}
                         <span class="text-[9px] bg-rose-950 text-rose-400 font-bold px-1.5 py-0.2 rounded border border-rose-800/80">Closed</span>
                         {% else %}
@@ -55,18 +64,21 @@
                 </div>
                 <div class="text-right shrink-0 ml-2">
                     {% if tracker and tracker.status == 'submitted' %}
-                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-1 rounded border border-emerald-700 block">
-                        ✓ In Review
+                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-1 rounded border border-emerald-700 inline-flex items-center space-x-1">
+                        <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>In Review</span>
                     </span>
                     <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Application Logged</span>
                     {% elif is_exp %}
-                    <span class="text-[10px] font-bold text-rose-300 bg-rose-950/90 px-2 py-0.5 rounded border border-rose-800/70 block">
-                        ⛔ Closed: {{ b.deadline_text }}
+                    <span class="text-[10px] font-bold text-rose-300 bg-rose-950/90 px-2 py-0.5 rounded border border-rose-800/70 inline-flex items-center space-x-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                        <span>Closed: {{ b.deadline_text }}</span>
                     </span>
                     <span class="text-[9px] text-rose-400 font-semibold mt-0.5 block">Deadline Passed</span>
                     {% else %}
-                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-800/70 block">
-                        🟢 Closes: {{ b.deadline_text }}
+                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-800/70 inline-flex items-center space-x-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Closes: {{ b.deadline_text }}</span>
                     </span>
                     <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Applications Open</span>
                     {% endif %}
@@ -91,15 +103,17 @@
                 <!-- In-App Direct Apply Button -->
                 {% if tracker and tracker.status == 'submitted' %}
                 <span class="px-3.5 py-2 rounded-xl bg-emerald-950 border border-emerald-600/80 text-emerald-300 text-xs font-bold flex items-center space-x-1.5">
-                    <span>✓ Application Submitted</span>
+                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>Application Submitted</span>
                 </span>
                 {% elif is_exp %}
                 <!-- Disabled when expired -->
                 <div class="flex items-center space-x-1.5">
                     <button type="button" disabled 
-                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 text-slate-500 text-xs font-bold border border-slate-700/60 cursor-not-allowed flex items-center space-x-1" 
+                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 text-slate-500 text-xs font-bold border border-slate-700/60 cursor-not-allowed flex items-center space-x-1.5" 
                         title="Applications for this funding scheme closed on {{ b.deadline_text }}">
-                        <span>⛔ Closed for 2026</span>
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Closed for 2026</span>
                     </button>
                     <button type="button" onclick="askAiAboutAlternatives('{{ b.name|escapejs }}')" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 tap-scale">
                         Open Alternatives
@@ -109,15 +123,22 @@
                 <!-- Enabled for active bursaries -->
                 <button type="button" onclick="openApplicationModal({{ b.id }}, '{{ b.name|escapejs }}', '{{ b.provider|escapejs }}', {{ b.minimum_aps }})" 
                     class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 text-xs font-black shadow-lg shadow-teal-500/25 tap-scale flex items-center space-x-1.5">
-                    <span>🚀 Apply Now</span>
+                    <svg class="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <span>Apply Now</span>
                 </button>
                 {% endif %}
 
                 <div class="flex items-center space-x-1.5">
                     <!-- Tracking Checklist Toggle -->
                     <button type="button" onclick="toggleBursary({{ b.id }})" 
-                        class="px-2.5 py-2 rounded-xl text-xs font-semibold transition tap-scale {% if tracker %}bg-teal-950 border border-teal-700 text-teal-300{% else %}bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700{% endif %}">
-                        {% if tracker %}✓ Tracked{% else %}+ Bookmark{% endif %}
+                        class="px-2.5 py-2 rounded-xl text-xs font-semibold transition tap-scale flex items-center space-x-1 {% if tracker %}bg-teal-950 border border-teal-700 text-teal-300{% else %}bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700{% endif %}">
+                        {% if tracker %}
+                        <svg class="w-3 h-3 text-teal-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                        <span>Tracked</span>
+                        {% else %}
+                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                        <span>Bookmark</span>
+                        {% endif %}
                     </button>
 
                     {% if not is_exp %}
@@ -178,8 +199,8 @@
                 <h3 class="text-base font-bold text-white mt-0.5" id="modalBursaryTitle">Applying for NSFAS</h3>
                 <p class="text-xs text-slate-400" id="modalProvider">Department of Higher Education</p>
             </div>
-            <button onclick="closeApplicationModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center tap-scale">
-                ✕
+            <button onclick="closeApplicationModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center tap-scale" aria-label="Close">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
@@ -311,8 +332,8 @@
 
         <!-- SUCCESS CONFIRMATION RECEIPT (Initially Hidden) -->
         <div id="applicationSuccessReceipt" class="hidden space-y-4 text-center py-3">
-            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-3xl font-black shadow-lg">
-                ✓
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg">
+                <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
             </div>
             <div>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 mb-1">

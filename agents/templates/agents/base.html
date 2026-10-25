@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>{% block title %}PfunzoBridge | Mobile Agent{% endblock %}</title>
 
-    <!-- PWA Manifest -->
+    <!-- PWA Manifest & App Icon -->
     <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇿🇦</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><rect width='32' height='32' rx='8' fill='%2314b8a6'/><path d='M8 10h16M8 16h11M8 22h7' stroke='%23022c22' stroke-width='2.5' stroke-linecap='round'/></svg>">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -118,7 +118,9 @@
             {% for message in messages %}
             <div class="p-3 rounded-xl {% if message.tags == 'success' %}bg-emerald-950/90 border-emerald-800 text-emerald-300{% elif message.tags == 'error' %}bg-rose-950/90 border-rose-800 text-rose-300{% else %}bg-slate-800 border-slate-700 text-slate-200{% endif %} border text-xs flex items-center justify-between shadow-md">
                 <span>{{ message }}</span>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white ml-2 text-xs">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white ml-2 p-1 rounded hover:bg-slate-700/50 transition" aria-label="Close">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
             {% endfor %}
         </div>
