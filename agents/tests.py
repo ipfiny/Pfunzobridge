@@ -61,6 +61,13 @@ class MobileViewEndpointsTests(TestCase):
         response = unauthed_client.get(reverse('mobile_dashboard'))
         self.assertEqual(response.status_code, 302) # Redirect to login
 
+    def test_login_view_renders_successfully(self):
+        unauthed_client = Client()
+        response = unauthed_client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "PfunzoBridge Access")
+        self.assertContains(response, "Continue with Google")
+
     def test_dashboard_view(self):
         response = self.client.get(reverse('mobile_dashboard'))
         self.assertEqual(response.status_code, 200)
