@@ -163,6 +163,19 @@ class MobileViewEndpointsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
 
+    def test_direct_google_sign_in_action(self):
+        test_client = Client()
+        response = test_client.get(reverse('login') + '?action=google')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(User.objects.filter(email='nyamandeipfi@gmail.com').exists())
+        user = User.objects.get(email='nyamandeipfi@gmail.com')
+        self.assertTrue(StudentProfile.objects.filter(session_id=f"user_{user.id}").exists())
+
+        # Test dashboard is accessible following Google sign-in
+        dash_response = test_client.get(reverse('mobile_dashboard'))
+        self.assertEqual(dash_response.status_code, 200)
+        self.assertContains(dash_response, "PfunzoBridge SA Advisor")
+
     def test_deadline_badge_colors(self):
         today = timezone.localdate()
 
