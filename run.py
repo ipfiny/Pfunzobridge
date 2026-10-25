@@ -20,8 +20,8 @@ for pkg in USER_PACKAGES:
 
 def main():
     print("=" * 65)
-    print("  🇿🇦 PfunzoBridge - Access to Higher Education Platform")
-    print("  FNB AOTY Hackathon 2026 | Project: Ipfi Nyamande")
+    print("  PfunzoBridge - Access to Higher Education Platform")
+    print("  Developer & Project Lead: Ipfi Nyamande")
     print("=" * 65)
     print("Starting Django server at http://127.0.0.1:8000 ...")
     print("For mobile testing on same Wi-Fi: http://0.0.0.0:8000")

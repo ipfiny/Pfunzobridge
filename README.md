@@ -1,5 +1,5 @@
-# 🇿🇦 PfunzoBridge — Mobile-First Agentic Higher Education Platform
-**FNB AOTY Hackathon 2026** | **Project:** Ipfi Nyamande  
+# PfunzoBridge — Mobile-First Agentic Higher Education Platform
+**Project Lead:** Ipfi Nyamande  
 **Tech Stack:** Python 3.14, Django 5.1, Tailwind CSS, JavaScript, Progressive Web App (PWA), Google Antigravity Agent Engine  
 
 ---

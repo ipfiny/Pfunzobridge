@@ -44,17 +44,17 @@ def get_or_create_session(request):
     return session_id
 
 def seed_demo_profile(session_id, username):
-    """Initializes rich demo data for hackathon judges and evaluators."""
+    """Initializes rich demo data for evaluators."""
     profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
     if username == 'judge':
         profile.full_name = 'Judge Evaluator'
         profile.grade = '12'
         profile.province = 'Gauteng'
-        profile.school_name = 'FNB AOTY Hackathon Evaluation Center'
+        profile.school_name = 'National Education Evaluation Center'
         profile.calculated_aps = 38
         profile.id_number = '0601015082088'
         profile.phone = '082 999 8888'
-        profile.email = 'judge@fnbaoty.co.za'
+        profile.email = 'judge@pfunzobridge.co.za'
         profile.save()
     elif username == 'student':
         profile.full_name = 'Ipfi Nyamande'
@@ -333,6 +333,12 @@ def track_bursary_api(request):
 @csrf_exempt
 def submit_application_api(request):
     """Direct in-app application submission for bursaries and university qualifications."""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'Please log in or register before submitting an official application.'
+        }, status=401)
+
     if request.method == "POST":
         try:
             data = json.loads(request.body.decode('utf-8'))
@@ -471,11 +477,11 @@ def login_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
 
-        # One-Tap Demo Logins for Hackathon Evaluators
+        # Demo Logins for Evaluators
         if action == 'demo_judge':
             user, _ = User.objects.get_or_create(
                 username='judge',
-                defaults={'first_name': 'Judge', 'last_name': 'Evaluator', 'email': 'judge@fnbaoty.co.za'}
+                defaults={'first_name': 'Judge', 'last_name': 'Evaluator', 'email': 'judge@pfunzobridge.co.za'}
             )
             login(request, user)
             seed_demo_profile(f"user_{user.id}", 'judge')

@@ -20,7 +20,7 @@
             theme: {
                 extend: {
                     colors: {
-                        fnb: {
+                        brand: {
                             teal: '#008479',
                             dark: '#005f57',
                             amber: '#f59e0b',
@@ -111,7 +111,7 @@
     </header>
 
     <!-- Main Content Area with Bottom Clearance for Fixed Navigation -->
-    <main class="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 max-w-xl mx-auto w-full">
+    <main class="flex-1 overflow-y-auto px-3.5 pt-3 pb-32 max-w-xl mx-auto w-full">
         <!-- Django Notification Messages -->
         {% if messages %}
         <div class="space-y-2 mb-3">
@@ -127,51 +127,59 @@
         {% endif %}
         {% block content %}{% endblock %}
         <!-- Safe bottom clearance spacer so fixed bottom bar never overlaps content -->
-        <div class="h-24 w-full shrink-0" aria-hidden="true"></div>
+        <div class="h-28 w-full shrink-0" aria-hidden="true"></div>
     </main>
 
-    <!-- Fixed Mobile Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-900/95 backdrop-blur-md px-2 py-1 shadow-2xl max-w-xl mx-auto">
-        <div class="grid grid-cols-5 gap-1">
-            
-            <!-- Tab 1: AI Agent Counselor -->
-            <a href="{% url 'mobile_dashboard' %}" class="flex flex-col items-center justify-center py-1.5 rounded-lg tap-scale {% if active_tab == 'agents' %}text-teal-400 bg-slate-800/80 font-semibold{% else %}text-slate-400 hover:text-slate-200{% endif %}">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    <!-- Floating Action Button (FAB) for AI Counselor -->
+    {% if active_tab != 'agents' %}
+    <div class="fixed bottom-24 right-4 sm:right-[max(1rem,calc(50%-17.5rem))] z-40">
+        <a href="{% url 'mobile_dashboard' %}" 
+           class="group flex items-center space-x-2 py-3 px-4 rounded-full bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-400 text-slate-950 font-black text-xs shadow-2xl shadow-teal-500/40 hover:shadow-teal-400/50 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-slate-900 tap-scale"
+           title="Open AI Counselor">
+            <div class="w-6 h-6 rounded-full bg-slate-950/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                <span class="text-[10px] tracking-tight">Counselor</span>
-            </a>
+            </div>
+            <span class="tracking-wide uppercase font-black text-xs">AI Counselor</span>
+        </a>
+    </div>
+    {% endif %}
 
-            <!-- Tab 2: APS Calculator -->
-            <a href="{% url 'aps_calculator' %}" class="flex flex-col items-center justify-center py-1.5 rounded-lg tap-scale {% if active_tab == 'aps' %}text-teal-400 bg-slate-800/80 font-semibold{% else %}text-slate-400 hover:text-slate-200{% endif %}">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Fixed Mobile Bottom Navigation Bar (High Accessibility) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800/90 bg-slate-900/95 backdrop-blur-md px-3 py-2 shadow-2xl max-w-xl mx-auto">
+        <div class="grid grid-cols-4 gap-2">
+            
+            <!-- Tab 1: APS Calculator -->
+            <a href="{% url 'aps_calculator' %}" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl min-h-[52px] tap-scale transition-colors {% if active_tab == 'aps' %}text-teal-400 bg-slate-800/90 font-bold shadow-inner{% else %}text-slate-400 hover:text-slate-200{% endif %}">
+                <svg class="w-6 h-6 mb-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                 </svg>
-                <span class="text-[10px] tracking-tight">APS Calc</span>
+                <span class="text-xs font-semibold tracking-tight">APS Calc</span>
             </a>
 
-            <!-- Tab 3: Career Quiz -->
-            <a href="{% url 'career_quiz' %}" class="flex flex-col items-center justify-center py-1.5 rounded-lg tap-scale {% if active_tab == 'quiz' %}text-teal-400 bg-slate-800/80 font-semibold{% else %}text-slate-400 hover:text-slate-200{% endif %}">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Tab 2: Career Quiz -->
+            <a href="{% url 'career_quiz' %}" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl min-h-[52px] tap-scale transition-colors {% if active_tab == 'quiz' %}text-teal-400 bg-slate-800/90 font-bold shadow-inner{% else %}text-slate-400 hover:text-slate-200{% endif %}">
+                <svg class="w-6 h-6 mb-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                <span class="text-[10px] tracking-tight">Career Quiz</span>
+                <span class="text-xs font-semibold tracking-tight">Career Quiz</span>
             </a>
 
-            <!-- Tab 4: Bursaries & NSFAS -->
-            <a href="{% url 'bursaries_index' %}" class="flex flex-col items-center justify-center py-1.5 rounded-lg tap-scale {% if active_tab == 'bursaries' %}text-teal-400 bg-slate-800/80 font-semibold{% else %}text-slate-400 hover:text-slate-200{% endif %}">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Tab 3: Bursaries & NSFAS -->
+            <a href="{% url 'bursaries_index' %}" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl min-h-[52px] tap-scale transition-colors {% if active_tab == 'bursaries' %}text-teal-400 bg-slate-800/90 font-bold shadow-inner{% else %}text-slate-400 hover:text-slate-200{% endif %}">
+                <svg class="w-6 h-6 mb-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-[10px] tracking-tight">Bursaries</span>
+                <span class="text-xs font-semibold tracking-tight">Bursaries</span>
             </a>
 
-            <!-- Tab 5: Profile & Readiness -->
-            <a href="{% url 'student_profile' %}" class="flex flex-col items-center justify-center py-1.5 rounded-lg tap-scale {% if active_tab == 'profile' %}text-teal-400 bg-slate-800/80 font-semibold{% else %}text-slate-400 hover:text-slate-200{% endif %}">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Tab 4: Profile & Readiness -->
+            <a href="{% url 'student_profile' %}" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl min-h-[52px] tap-scale transition-colors {% if active_tab == 'profile' %}text-teal-400 bg-slate-800/90 font-bold shadow-inner{% else %}text-slate-400 hover:text-slate-200{% endif %}">
+                <svg class="w-6 h-6 mb-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="text-[10px] tracking-tight">Profile</span>
+                <span class="text-xs font-semibold tracking-tight">Profile</span>
             </a>
 
         </div>

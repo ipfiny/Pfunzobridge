@@ -3,7 +3,7 @@ cd /d "%~dp0"
 title PfunzoBridge - Mobile Agentic App
 echo ========================================================
 echo   PfunzoBridge - Access to Higher Education Platform
-echo   FNB AOTY Hackathon 2026 | Developer: Nyamande Ipfi
+echo   Developer: Nyamande Ipfi
 echo ========================================================
 echo.
 py manage.py check

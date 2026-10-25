@@ -113,3 +113,13 @@ class MobileViewEndpointsTests(TestCase):
         response = self.client.get(reverse('student_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Student Profile")
+
+    def test_apply_now_requires_login(self):
+        unauthed_client = Client()
+        response = unauthed_client.post(
+            reverse('submit_application_api'),
+            data=json.dumps({'bursary_id': 1}),
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(response.json()['success'])

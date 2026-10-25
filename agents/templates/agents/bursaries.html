@@ -53,10 +53,6 @@
                             <svg class="w-2.5 h-2.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                             <span>Submitted</span>
                         </span>
-                        {% elif is_exp %}
-                        <span class="text-[9px] bg-rose-950 text-rose-400 font-bold px-1.5 py-0.2 rounded border border-rose-800/80">Closed</span>
-                        {% else %}
-                        <span class="text-[9px] bg-emerald-950 text-emerald-400 font-bold px-1.5 py-0.2 rounded border border-emerald-800/80">Active</span>
                         {% endif %}
                     </div>
                     <h3 class="text-sm font-bold text-white mt-0.5">{{ b.name }}</h3>
@@ -69,20 +65,12 @@
                         <span>In Review</span>
                     </span>
                     <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Application Logged</span>
-                    {% elif is_exp %}
-                    <span class="text-[10px] font-bold text-rose-300 bg-rose-950/90 px-2 py-0.5 rounded border border-rose-800/70 inline-flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                        <span>Closed: {{ b.deadline_text }}</span>
-                    </span>
-                    <span class="text-[9px] text-rose-400 font-semibold mt-0.5 block">Deadline Passed</span>
                     {% else %}
-                    <span class="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-800/70 inline-flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <span>Closes: {{ b.deadline_text }}</span>
+                    <span class="text-[11px] font-semibold text-slate-300 block">
+                        Deadline: {{ b.deadline_text }}
                     </span>
-                    <span class="text-[9px] text-emerald-400 font-semibold mt-0.5 block">Applications Open</span>
                     {% endif %}
-                    <span class="text-[10px] text-slate-400 mt-1 block">Min APS: {{ b.minimum_aps }}</span>
+                    <span class="text-[10px] text-teal-400 font-medium mt-0.5 block">Min APS: {{ b.minimum_aps }}</span>
                 </div>
             </div>
 
@@ -107,25 +95,26 @@
                     <span>Application Submitted</span>
                 </span>
                 {% elif is_exp %}
-                <!-- Disabled when expired -->
-                <div class="flex items-center space-x-1.5">
-                    <button type="button" disabled 
-                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 text-slate-500 text-xs font-bold border border-slate-700/60 cursor-not-allowed flex items-center space-x-1.5" 
-                        title="Applications for this funding scheme closed on {{ b.deadline_text }}">
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Closed for 2026</span>
-                    </button>
-                    <button type="button" onclick="askAiAboutAlternatives('{{ b.name|escapejs }}')" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs border border-slate-700 tap-scale">
-                        Open Alternatives
-                    </button>
-                </div>
-                {% else %}
-                <!-- Enabled for active bursaries -->
-                <button type="button" onclick="openApplicationModal({{ b.id }}, '{{ b.name|escapejs }}', '{{ b.provider|escapejs }}', {{ b.minimum_aps }})" 
-                    class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 text-xs font-black shadow-lg shadow-teal-500/25 tap-scale flex items-center space-x-1.5">
-                    <svg class="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    <span>Apply Now</span>
+                <!-- Alternatives when expired -->
+                <button type="button" onclick="askAiAboutAlternatives('{{ b.name|escapejs }}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-semibold border border-slate-700 tap-scale">
+                    Open Alternatives
                 </button>
+                {% else %}
+                <!-- Enabled for active bursaries (Login Required) -->
+                    {% if user.is_authenticated %}
+                    <button type="button" onclick="openApplicationModal({{ b.id }}, '{{ b.name|escapejs }}', '{{ b.provider|escapejs }}', {{ b.minimum_aps }})" 
+                        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 text-xs font-black shadow-lg shadow-teal-500/25 tap-scale flex items-center space-x-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <span>Apply Now</span>
+                    </button>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={% url 'bursaries_index' %}" 
+                        class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold border border-teal-700/60 tap-scale flex items-center space-x-1.5"
+                        title="Sign in to apply">
+                        <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                        <span>Sign In to Apply</span>
+                    </a>
+                    {% endif %}
                 {% endif %}
 
                 <div class="flex items-center space-x-1.5">
