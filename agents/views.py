@@ -528,7 +528,7 @@ def login_view(request):
                 messages.success(request, f"Welcome back, {user.first_name or user.username}! Ready to use the AI Counselor.")
                 return redirect(next_url)
             else:
-                error_message = "Invalid username or password. Please try again, tap 'Forgot Password' below, or use a One-Tap Demo account."
+                error_message = "Invalid username or password. Please try again or tap 'Forgot Password' below."
 
         # Password Reset / Recovery Form Action
         elif action == 'reset_password':

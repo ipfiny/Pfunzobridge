@@ -16,47 +16,6 @@
         </p>
     </div>
 
-    <!-- Hackathon Quick Demo Accounts (One-Tap Access) -->
-    <div class="rounded-2xl bg-teal-950/30 border border-teal-800/60 p-4 shadow-lg space-y-2.5">
-        <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold text-teal-300 uppercase tracking-wider flex items-center space-x-1">
-                <span>⚡</span>
-                <span>FNB Hackathon One-Tap Demo Logins</span>
-            </span>
-            <span class="text-[9px] bg-teal-950 text-teal-400 font-semibold px-2 py-0.5 rounded border border-teal-800">Instant</span>
-        </div>
-        <p class="text-[11px] text-slate-300">Evaluate the system instantly with pre-configured judge or student accounts:</p>
-        
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-            <form method="post" action="{% url 'login' %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="demo_judge">
-                <input type="hidden" name="next" value="{{ next }}">
-                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-teal-600/60 text-teal-300 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
-                    <span>👨‍⚖️ Judge Demo</span>
-                </button>
-            </form>
-
-            <form method="post" action="{% url 'login' %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="demo_student">
-                <input type="hidden" name="next" value="{{ next }}">
-                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-teal-600/60 text-teal-300 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
-                    <span>🧑‍🎓 Student Demo</span>
-                </button>
-            </form>
-
-            <form method="post" action="{% url 'login' %}" class="col-span-2 sm:col-span-1">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="quick_login_nyamande">
-                <input type="hidden" name="next" value="{{ next }}">
-                <button type="submit" class="w-full py-2.5 px-2 rounded-xl bg-teal-900/80 hover:bg-teal-800 border border-teal-500/80 text-teal-200 font-bold text-xs shadow tap-scale flex items-center justify-center space-x-1 cursor-pointer">
-                    <span>📱 1-Tap Sync (Ipfi)</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- Error Alert if any -->
     {% if error_message %}
     <div class="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-center justify-between shadow-md">
