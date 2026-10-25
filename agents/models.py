@@ -90,18 +90,38 @@ class BursaryItem(models.Model):
 
     @property
     def deadline_status(self):
-        """Returns structured status for template rendering."""
+        """Returns structured deadline status: Green (far future >30d), Amber (upcoming <=30d), Red (passed <0d)."""
         from django.utils import timezone
         if not self.deadline_date:
-            return {'code': 'open', 'label': 'Open', 'badge_class': 'bg-emerald-950 text-emerald-300 border-emerald-800'}
+            return {
+                'code': 'future',
+                'color': 'green',
+                'label': f"Deadline: {self.deadline_text}",
+                'badge_class': 'bg-emerald-950 text-emerald-300 border-emerald-800'
+            }
         
         diff = (self.deadline_date - timezone.localdate()).days
         if diff < 0:
-            return {'code': 'expired', 'label': 'Closed', 'badge_class': 'bg-rose-950 text-rose-300 border-rose-800'}
-        elif diff <= 14:
-            return {'code': 'urgent', 'label': f'Closing Soon ({diff}d left)', 'badge_class': 'bg-amber-950 text-amber-300 border-amber-800'}
+            return {
+                'code': 'expired',
+                'color': 'red',
+                'label': f"Deadline: {self.deadline_text}",
+                'badge_class': 'bg-red-950 text-red-300 border-red-800'
+            }
+        elif diff <= 30:
+            return {
+                'code': 'upcoming',
+                'color': 'amber',
+                'label': f"Deadline: {self.deadline_text}",
+                'badge_class': 'bg-amber-950 text-amber-300 border-amber-800'
+            }
         else:
-            return {'code': 'open', 'label': f'Open ({diff}d left)', 'badge_class': 'bg-emerald-950 text-emerald-300 border-emerald-800'}
+            return {
+                'code': 'future',
+                'color': 'green',
+                'label': f"Deadline: {self.deadline_text}",
+                'badge_class': 'bg-emerald-950 text-emerald-300 border-emerald-800'
+            }
 
 
 class BursaryTracking(models.Model):

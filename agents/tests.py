@@ -1,5 +1,7 @@
 import json
 import asyncio
+from datetime import timedelta
+from django.utils import timezone
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -153,3 +155,55 @@ class MobileViewEndpointsTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
+
+    def test_deadline_badge_colors(self):
+        today = timezone.localdate()
+
+        # 1. Past deadline -> Red badge
+        past_bursary = BursaryItem.objects.create(
+            name="Past Scheme",
+            provider="Past Provider",
+            deadline_date=today - timedelta(days=5),
+            deadline_text="5 Days Ago"
+        )
+        status_past = past_bursary.deadline_status
+        self.assertEqual(status_past['color'], 'red')
+        self.assertIn('bg-red-950', status_past['badge_class'])
+        self.assertIn('text-red-300', status_past['badge_class'])
+        self.assertIn('border-red-800', status_past['badge_class'])
+
+        # 2. Upcoming deadline (within 30 days) -> Amber badge
+        upcoming_bursary = BursaryItem.objects.create(
+            name="Upcoming Scheme",
+            provider="Upcoming Provider",
+            deadline_date=today + timedelta(days=12),
+            deadline_text="In 12 Days"
+        )
+        status_upcoming = upcoming_bursary.deadline_status
+        self.assertEqual(status_upcoming['color'], 'amber')
+        self.assertIn('bg-amber-950', status_upcoming['badge_class'])
+        self.assertIn('text-amber-300', status_upcoming['badge_class'])
+        self.assertIn('border-amber-800', status_upcoming['badge_class'])
+
+        # 3. Far future deadline (> 30 days away) -> Green badge
+        future_bursary = BursaryItem.objects.create(
+            name="Future Scheme",
+            provider="Future Provider",
+            deadline_date=today + timedelta(days=90),
+            deadline_text="In 3 Months"
+        )
+        status_future = future_bursary.deadline_status
+        self.assertEqual(status_future['color'], 'green')
+        self.assertIn('bg-emerald-950', status_future['badge_class'])
+        self.assertIn('text-emerald-300', status_future['badge_class'])
+        self.assertIn('border-emerald-800', status_future['badge_class'])
+
+        # 4. View renders the deadline badges
+        response = self.client.get(reverse('bursaries_index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Deadline: 5 Days Ago')
+        self.assertContains(response, 'Deadline: In 12 Days')
+        self.assertContains(response, 'Deadline: In 3 Months')
+        self.assertContains(response, 'border-red-800')
+        self.assertContains(response, 'border-amber-800')
+        self.assertContains(response, 'border-emerald-800')
