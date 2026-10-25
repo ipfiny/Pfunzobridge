@@ -3,6 +3,9 @@
 {% block title %}Log In &amp; Access | PfunzoBridge{% endblock %}
 
 {% block content %}
+<!-- Google Identity Services (Official Client) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <div class="space-y-4">
 
     <!-- Header Card -->
@@ -32,6 +35,35 @@
     <!-- Login / Register Tabs Container -->
     <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 shadow-lg space-y-4">
         
+        <!-- Google Sign-In Primary Action -->
+        <div class="space-y-3">
+            <button type="button" onclick="triggerGoogleSignIn()" id="googleSignInBtn"
+                class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-800 font-bold text-xs shadow-md border border-slate-200 tap-scale flex items-center justify-center space-x-2.5 transition-all cursor-pointer">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span id="googleBtnText" class="tracking-wide text-slate-800 font-bold">Continue with Google</span>
+            </button>
+
+            <!-- Official GIS Container -->
+            <div id="g_id_onload"
+                 data-client_id="{{ google_client_id }}"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+
+            <div class="relative flex items-center justify-center pt-1 pb-0.5">
+                <div class="border-t border-slate-800 w-full"></div>
+                <span class="bg-slate-900 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">or with username &amp; password</span>
+                <div class="border-t border-slate-800 w-full"></div>
+            </div>
+        </div>
+
         <!-- Toggle Tabs -->
         <div class="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-bold text-center">
             <button type="button" id="tabLoginBtn" onclick="switchTab('login')" class="py-2 rounded-lg bg-teal-500 text-slate-950 transition cursor-pointer">
@@ -288,6 +320,46 @@
     </div>
 </div>
 
+<!-- GOOGLE SIGN-IN MODAL (FALLBACK / PROMPT) -->
+<div id="googleEmailModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4 relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <h3 class="text-sm font-bold text-white">Google Sign-In</h3>
+            </div>
+            <button type="button" onclick="closeGoogleEmailModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs" aria-label="Close">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form onsubmit="handleManualGoogleSignIn(event)" class="space-y-3 text-xs">
+            <p class="text-[11px] text-slate-300">
+                Sign in with your Google account to automatically mirror your marks, applications, and bursaries across your phone and laptop:
+            </p>
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Google Email Address *</label>
+                <input type="email" id="googleFallbackEmail" required placeholder="yourname@gmail.com" value="nyamandeipfi@gmail.com"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Full Name (Optional)</label>
+                <input type="text" id="googleFallbackName" placeholder="e.g. Ipfi Nyamande" value="Ipfi Nyamande"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+            <div id="googleFallbackFeedback" class="hidden p-2.5 rounded-xl text-xs"></div>
+            <button type="submit" id="googleFallbackSubmitBtn" class="w-full py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg tap-scale transition cursor-pointer">
+                Continue to PfunzoBridge &rarr;
+            </button>
+        </form>
+    </div>
+</div>
+
 <script>
 // Toggle Password Visibility (Eye Icon Button)
 function togglePasswordVisibility(inputId, btnId) {
@@ -508,6 +580,99 @@ function selectFoundUsername(uname) {
     if (uInp) uInp.value = uname;
     const pInp = document.getElementById('loginPassword');
     if (pInp) pInp.focus();
+}
+
+// Google Sign-In Integration (Official GIS + Instant Fallback)
+const GOOGLE_CLIENT_ID = "{{ google_client_id|default:'' }}";
+const NEXT_URL = "{{ next|escapejs }}";
+
+function triggerGoogleSignIn() {
+    if (typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID) {
+        try {
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    openGoogleEmailModal();
+                }
+            });
+        } catch (e) {
+            openGoogleEmailModal();
+        }
+    } else {
+        openGoogleEmailModal();
+    }
+}
+
+function openGoogleEmailModal() {
+    const m = document.getElementById('googleEmailModal');
+    if (m) m.classList.remove('hidden');
+}
+
+function closeGoogleEmailModal() {
+    const m = document.getElementById('googleEmailModal');
+    if (m) m.classList.add('hidden');
+}
+
+function handleManualGoogleSignIn(e) {
+    e.preventDefault();
+    const email = document.getElementById('googleFallbackEmail').value.trim();
+    const name = document.getElementById('googleFallbackName').value.trim();
+    const btn = document.getElementById('googleFallbackSubmitBtn');
+    const feedback = document.getElementById('googleFallbackFeedback');
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.innerText = "Signing in...";
+
+    fetch("{% url 'google_auth_api' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: name, next: NEXT_URL })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            feedback.className = "p-2.5 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-300 block";
+            feedback.innerText = "Success! Redirecting...";
+            setTimeout(() => { window.location.href = data.redirect_url || "{% url 'mobile_dashboard' %}"; }, 600);
+        } else {
+            btn.disabled = false;
+            btn.innerText = "Continue to PfunzoBridge →";
+            feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950 border border-rose-800 text-rose-300 block";
+            feedback.innerText = data.error || "Sign-in failed.";
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerText = "Continue to PfunzoBridge →";
+        feedback.className = "p-2.5 rounded-xl text-xs bg-rose-950 border border-rose-800 text-rose-300 block";
+        feedback.innerText = "Network error. Please try again.";
+    });
+}
+
+function handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+    const btnText = document.getElementById('googleBtnText');
+    if (btnText) btnText.innerText = "Authenticating with Google...";
+
+    fetch("{% url 'google_auth_api' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential, next: NEXT_URL })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (btnText) btnText.innerText = "Success! Redirecting...";
+            window.location.href = data.redirect_url || "{% url 'mobile_dashboard' %}";
+        } else {
+            alert(data.error || "Google Sign-In failed.");
+            if (btnText) btnText.innerText = "Continue with Google";
+        }
+    })
+    .catch(() => {
+        alert("Google Sign-In failed. Please try again.");
+        if (btnText) btnText.innerText = "Continue with Google";
+    });
 }
 </script>
 {% endblock %}

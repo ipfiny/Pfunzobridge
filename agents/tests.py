@@ -123,3 +123,33 @@ class MobileViewEndpointsTests(TestCase):
         )
         self.assertEqual(response.status_code, 401)
         self.assertFalse(response.json()['success'])
+
+    def test_google_auth_api_fallback(self):
+        test_client = Client()
+        payload = {
+            'email': 'sipho.google@example.com',
+            'name': 'Sipho Khumalo'
+        }
+        response = test_client.post(
+            reverse('google_auth_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertTrue(User.objects.filter(email='sipho.google@example.com').exists())
+        user = User.objects.get(email='sipho.google@example.com')
+        self.assertEqual(user.first_name, 'Sipho')
+        self.assertEqual(user.last_name, 'Khumalo')
+        self.assertTrue(StudentProfile.objects.filter(session_id=f"user_{user.id}").exists())
+
+    def test_google_auth_api_empty_email(self):
+        test_client = Client()
+        response = test_client.post(
+            reverse('google_auth_api'),
+            data=json.dumps({'email': ''}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()['success'])

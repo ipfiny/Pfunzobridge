@@ -46,6 +46,9 @@ else:
 # Render SSL Proxy Header
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Google Sign-In OAuth Client ID
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+
 # Production Security Hardening (SSDLC Compliance)
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
