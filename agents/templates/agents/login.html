@@ -369,11 +369,6 @@
                 <input type="email" id="googleFallbackEmail" required placeholder="yourname@gmail.com" value=""
                     class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
             </div>
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Full Legal Name *</label>
-                <input type="text" id="googleFallbackName" required placeholder="e.g. Sipho Dlamini" value=""
-                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
-            </div>
             <div id="googleFallbackFeedback" class="hidden p-2.5 rounded-xl text-xs"></div>
             <button type="submit" id="googleFallbackSubmitBtn" class="w-full py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg tap-scale transition cursor-pointer">
                 Continue to PfunzoBridge &rarr;
@@ -680,7 +675,6 @@ function closeGoogleEmailModal() {
 function handleManualGoogleSignIn(e) {
     e.preventDefault();
     const email = document.getElementById('googleFallbackEmail').value.trim();
-    const name = document.getElementById('googleFallbackName').value.trim();
     const btn = document.getElementById('googleFallbackSubmitBtn');
     const feedback = document.getElementById('googleFallbackFeedback');
     if (!email) return;
@@ -691,7 +685,7 @@ function handleManualGoogleSignIn(e) {
     fetch("{% url 'google_auth_api' %}", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, name: name, next: NEXT_URL })
+        body: JSON.stringify({ email: email, next: NEXT_URL })
     })
     .then(r => r.json())
     .then(data => {

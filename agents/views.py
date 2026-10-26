@@ -2,6 +2,7 @@ import asyncio
 import base64
 import json
 import os
+import re
 import urllib.request
 import urllib.parse
 import uuid
@@ -695,7 +696,12 @@ def google_auth_api(request):
         # 3. Fallback: Email from user input if in test mode
         email = (user_info.get('email') or manual_email or '').strip().lower()
         full_name = (user_info.get('name') or manual_name or '').strip()
-        given_name = user_info.get('given_name') or (full_name.split()[0] if full_name else '')
+        if not full_name and email:
+            email_user = email.split('@')[0]
+            clean_parts = [p.capitalize() for p in re.split(r'[._\-+0-9]+', email_user) if p]
+            full_name = " ".join(clean_parts) if clean_parts else email_user.capitalize()
+
+        given_name = user_info.get('given_name') or (full_name.split()[0] if full_name else 'Student')
         family_name = user_info.get('family_name') or (full_name.split()[-1] if len(full_name.split()) > 1 else '')
 
         if not email or '@' not in email:

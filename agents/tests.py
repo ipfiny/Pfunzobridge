@@ -155,6 +155,23 @@ class MobileViewEndpointsTests(TestCase):
         self.assertFalse(profile.is_onboarded)
         self.assertIn(reverse('complete_profile'), data['redirect_url'])
 
+    def test_google_auth_api_without_name(self):
+        test_client = Client()
+        payload = {
+            'email': 'lerato.moloi@example.com'
+        }
+        response = test_client.post(
+            reverse('google_auth_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        user = User.objects.get(email='lerato.moloi@example.com')
+        self.assertEqual(user.first_name, 'Lerato')
+        self.assertEqual(user.last_name, 'Moloi')
+
     def test_google_auth_api_empty_email(self):
         test_client = Client()
         response = test_client.post(
