@@ -1,6 +1,6 @@
 {% extends 'agents/base.html' %}
 
-{% block title %}PfunzoBridge AI Counselor | Mobile Agent{% endblock %}
+{% block title %}PfunzoAI Advisor | Mobile Agent{% endblock %}
 
 {% block content %}
 <div class="space-y-4">
@@ -13,7 +13,7 @@
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-950 text-teal-300 border border-teal-700/50 mb-1">
                     Autonomous Agent Active
                 </span>
-                <h2 class="text-lg font-bold text-white tracking-tight">PfunzoBridge SA Advisor</h2>
+                <h2 class="text-lg font-bold text-white tracking-tight">PfunzoAI Education Advisor</h2>
                 <p class="text-xs text-slate-300 mt-0.5">Your personal guide for APS scores, university applications, TVET colleges, and NSFAS funding.</p>
             </div>
             <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold shrink-0 ml-2">
@@ -82,7 +82,7 @@
     <!-- Agent Prompt Input Card -->
     <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-lg">
         <label for="prompt" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-            Ask the Autonomous Agent
+            Ask PfunzoAI Advisor
         </label>
         <textarea id="prompt" rows="3" 
             class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-sm text-slate-100 placeholder-slate-500 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none transition" 
@@ -91,7 +91,7 @@
         <div class="mt-3 flex items-center space-x-2">
             <button id="submit-btn" onclick="startAgent()" 
                 class="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 py-3.5 px-4 text-sm font-bold text-slate-950 shadow-lg shadow-teal-500/25 active:scale-[0.98] transition flex items-center justify-center space-x-2 touch-target">
-                <span id="btn-text">Run Agent Workflow</span>
+                <span id="btn-text">Ask PfunzoAI</span>
                 <span id="btn-spinner" class="hidden">
                     <svg class="animate-spin h-5 w-5 text-slate-950" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -110,19 +110,19 @@
         <div class="flex items-center justify-between mb-2">
             <div class="flex items-center space-x-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-live-dot" id="status-indicator"></span>
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Agent Live Stream</h3>
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">PfunzoAI Live Stream</h3>
             </div>
             <span id="stream-status" class="text-[11px] text-slate-400 font-mono">Idle</span>
         </div>
 
         <div id="output-wrapper" class="relative">
             <div id="output" class="min-h-[140px] max-h-[460px] overflow-y-auto rounded-xl bg-slate-950 p-3.5 text-sm font-sans text-slate-200 border border-slate-800/80 leading-relaxed space-y-2">
-                <p class="text-slate-500 italic text-xs">Waiting for prompt... Select a quick prompt above or type your question.</p>
+                <p class="text-slate-500 italic text-xs">Waiting for prompt... Select a quick prompt above or type your question for PfunzoAI.</p>
             </div>
         </div>
 
         <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Powered by Google Antigravity &amp; PfunzoBridge Engine</span>
+            <span>Powered by Google Antigravity &amp; PfunzoAI Engine</span>
             <button type="button" id="copy-btn" onclick="copyOutput()" class="text-teal-400 hover:text-teal-300 font-medium cursor-pointer tap-scale flex items-center space-x-1.5">
                 <svg id="copy-icon" class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                 <span id="copy-btn-text">Copy Text</span>

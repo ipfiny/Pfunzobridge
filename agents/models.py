@@ -15,7 +15,7 @@ class AgentTask(models.Model):
     session_id = models.CharField(max_length=128, default='guest-mobile-session')
     prompt = models.TextField()
     response = models.TextField(blank=True, default='')
-    agent_type = models.CharField(max_length=64, default='Antigravity SA Counselor')
+    agent_type = models.CharField(max_length=64, default='PfunzoAI')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)

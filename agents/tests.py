@@ -72,7 +72,7 @@ class MobileViewEndpointsTests(TestCase):
         response = self.client.get(reverse('mobile_dashboard'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "PfunzoBridge")
-        self.assertContains(response, "Counselor")
+        self.assertContains(response, "PfunzoAI")
 
     def test_aps_view(self):
         response = self.client.get(reverse('aps_calculator'))
@@ -314,3 +314,87 @@ class MobileViewEndpointsTests(TestCase):
         self.assertContains(response, 'border-red-800')
         self.assertContains(response, 'border-amber-800')
         self.assertContains(response, 'border-emerald-800')
+
+    def test_terms_of_use_view(self):
+        """Tests the Terms of Use educational agreement view."""
+        response = self.client.get(reverse('terms_of_use'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Terms of Use &amp; Learner Agreement")
+        self.assertContains(response, "POPIA Act 4 of 2013")
+        self.assertContains(response, "Educational Purpose &amp; Free Access")
+
+    def test_guest_profile_hides_private_sections(self):
+        """Ensures logged out/guest learners do not see grade, province, stats, checklist, or applications."""
+        unauthed_client = Client()
+        response = unauthed_client.get(reverse('student_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Guest Learner")
+        self.assertNotContains(response, "Computed APS")
+        self.assertNotContains(response, "My Submitted Applications")
+        self.assertNotContains(response, "Matriculant Readiness Checklist")
+        self.assertNotContains(response, "Bookmarked Opportunities")
+        # FAB should not be visible to logged out users
+        self.assertNotContains(response, "title=\"Open PfunzoAI\"")
+
+    def test_authenticated_profile_checklist_and_dynamic_verbs(self):
+        """Tests checklist dynamic checkmarks and verbs for authenticated users."""
+        profile, _ = StudentProfile.objects.get_or_create(session_id=f"user_{self.user.id}")
+        profile.calculated_aps = 0
+        profile.target_career = ""
+        profile.save()
+
+        # Check before completing steps: should show Calculate and Take Quiz
+        response = self.client.get(reverse('student_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Computed APS")
+        self.assertContains(response, "Matriculant Readiness Checklist")
+        self.assertContains(response, "APS Calculated (Not yet)")
+        self.assertContains(response, "Calculate</a>")
+        self.assertContains(response, "Career Archetype Identified (Not yet)")
+        self.assertContains(response, "Take Quiz</a>")
+        self.assertContains(response, "Applications Submitted (0)")
+        self.assertContains(response, "Apply Now</a>")
+
+        # Now complete APS and Career Quiz
+        profile.calculated_aps = 35
+        profile.target_career = "Technologist & Builder"
+        profile.save()
+
+        response = self.client.get(reverse('student_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "APS Calculated (35 Points)")
+        self.assertContains(response, "Recalculate</a>")
+        self.assertContains(response, "Career Archetype Identified (Technologist &amp; Builder)")
+        self.assertContains(response, "Retake Quiz</a>")
+
+    def test_download_user_data_pdf(self):
+        """Tests POPIA personal data subject access report PDF generation."""
+        response = self.client.get(reverse('download_user_data_pdf'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment; filename="pfunzobridge_data_', response['Content-Disposition'])
+        self.assertTrue(response.content.startswith(b'%PDF-'))
+
+    def test_delete_account_view(self):
+        """Tests permanent account and personal data erasure under POPIA Section 24."""
+        temp_user = User.objects.create_user(username='delstudent', password='password123')
+        StudentProfile.objects.create(session_id=f"user_{temp_user.id}", full_name="Delete Me")
+        temp_client = Client()
+        temp_client.login(username='delstudent', password='password123')
+
+        response = temp_client.post(reverse('delete_account'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username='delstudent').exists())
+        self.assertFalse(StudentProfile.objects.filter(session_id=f"user_{temp_user.id}").exists())
+
+    def test_save_career_archetype_api(self):
+        """Tests API endpoint to save career archetype from quiz."""
+        payload = {"archetype_title": "Healthcare & Social Worker"}
+        response = self.client.post(
+            reverse('save_career_archetype_api'),
+            data=json.dumps(payload),
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        profile = StudentProfile.objects.get(session_id=f"user_{self.user.id}")
+        self.assertEqual(profile.target_career, "Healthcare & Social Worker")

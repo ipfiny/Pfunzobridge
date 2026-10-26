@@ -77,7 +77,7 @@
             <!-- Action buttons -->
             <div class="mt-5 flex flex-col space-y-2">
                 <button type="button" onclick="askAiAboutArchetype()" class="w-full py-3 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shadow-lg shadow-teal-500/20 tap-scale flex items-center justify-center space-x-2">
-                    <span>Ask PfunzoBridge AI to Plan This Career</span>
+                    <span>Ask PfunzoAI to Plan This Career</span>
                     <span>→</span>
                 </button>
                 <button type="button" onclick="restartQuiz()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold tap-scale">
@@ -167,6 +167,20 @@ function showResults() {
     document.getElementById('archetypeBursaries').innerHTML = arch.bursaries.map(b => `
         <span class="px-2 py-0.5 rounded bg-teal-950 border border-teal-800 text-teal-400 font-medium">${b}</span>
     `).join('');
+
+    // Asynchronously save career archetype to student profile
+    try {
+        fetch("{% url 'save_career_archetype_api' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                archetype_key: winningKey,
+                archetype_title: arch.title
+            })
+        }).catch(err => console.log('Archetype save note:', err));
+    } catch(e) {}
 }
 
 function askAiAboutArchetype() {

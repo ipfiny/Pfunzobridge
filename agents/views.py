@@ -9,7 +9,7 @@ import uuid
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.http import StreamingHttpResponse, JsonResponse
+from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
@@ -22,6 +22,7 @@ from .models import AgentTask, StudentProfile, BursaryItem, BursaryTracking, Sub
 from .services.antigravity_runner import stream_agent_execution
 from .services.aps_service import calculate_student_aps, SA_DEGREE_CATALOG
 from .services.data_store import DEFAULT_BURSARIES, CAREER_QUIZ_QUESTIONS, CAREER_ARCHETYPES
+from .services.pdf_export import generate_learner_popia_pdf
 
 def ensure_seed_data():
     """Initializes default bursary items and ensures demo user account exists."""
@@ -104,7 +105,7 @@ def mobile_dashboard(request):
     context = {
         'recent_tasks': recent_tasks,
         'total_bursaries': total_bursaries,
-        'page_title': 'PfunzoBridge AI Counselor',
+        'page_title': 'PfunzoAI Advisor',
         'active_tab': 'agents'
     }
     return render(request, 'agents/index.html', context)
@@ -114,7 +115,7 @@ def mobile_dashboard(request):
 def run_agent_api(request):
     """API endpoint to run agent tasks and stream output to mobile frontend."""
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Please log in before using the AI Counselor chatbot."}, status=401)
+        return JsonResponse({"error": "Please log in before using PfunzoAI."}, status=401)
 
     if request.method == "POST":
         prompt = request.POST.get("prompt", "").strip()
@@ -456,14 +457,93 @@ def profile_view(request):
     tracked_bursaries = BursaryTracking.objects.filter(session_id=session_id).select_related('bursary')
     submitted_applications = SubmittedApplication.objects.filter(session_id=session_id)
 
+    has_aps = bool(profile.calculated_aps and profile.calculated_aps > 0)
+    has_archetype = bool(profile.target_career and profile.target_career.strip())
+    has_applications = bool(submitted_applications.exists())
+
     context = {
         'page_title': 'Student Profile & Checklist',
         'active_tab': 'profile',
         'profile': profile,
         'tracked_bursaries': tracked_bursaries,
-        'submitted_applications': submitted_applications
+        'submitted_applications': submitted_applications,
+        'has_aps': has_aps,
+        'has_archetype': has_archetype,
+        'has_applications': has_applications,
     }
     return render(request, 'agents/profile.html', context)
+
+
+@login_required(login_url='login')
+def download_user_data_pdf(request):
+    """Generates an official POPIA Subject Access PDF report for the authenticated learner."""
+    session_id = get_or_create_session(request)
+    profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
+    tracked_bursaries = BursaryTracking.objects.filter(session_id=session_id).select_related('bursary')
+    submitted_applications = SubmittedApplication.objects.filter(session_id=session_id)
+
+    pdf_bytes = generate_learner_popia_pdf(
+        user=request.user,
+        profile=profile,
+        tracked_bursaries=tracked_bursaries,
+        submitted_applications=submitted_applications
+    )
+
+    filename = f"pfunzobridge_data_{request.user.username}_{timezone.now().strftime('%Y%m%d')}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required(login_url='login')
+def delete_account_view(request):
+    """Permanently erases user account and all associated personal data in accordance with POPIA."""
+    if request.method == "POST":
+        user = request.user
+        # Protect demo account from being wiped during evaluations
+        if user.username == 'demo':
+            messages.warning(
+                request,
+                "The demo evaluation account cannot be deleted, but this POPIA erasure control is fully active for all registered accounts."
+            )
+            return redirect('student_profile')
+
+        session_id = f"user_{user.id}"
+        # Erase all associated student records
+        StudentProfile.objects.filter(session_id=session_id).delete()
+        BursaryTracking.objects.filter(session_id=session_id).delete()
+        SubmittedApplication.objects.filter(session_id=session_id).delete()
+        AgentTask.objects.filter(session_id=session_id).delete()
+
+        username = user.username
+        logout(request)
+        user.delete()
+
+        messages.success(
+            request,
+            f"Account '{username}' and all associated personal data have been permanently deleted in accordance with POPIA Section 24."
+        )
+        return redirect('login')
+    return redirect('student_profile')
+
+
+@csrf_exempt
+def save_career_archetype_api(request):
+    """Saves student's quiz archetype and target career from career guidance quiz."""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            session_id = get_or_create_session(request)
+            profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
+            archetype_title = data.get('archetype_title', '').strip()
+            if archetype_title:
+                profile.target_career = archetype_title
+                profile.save()
+                return JsonResponse({"success": True, "target_career": profile.target_career})
+            return JsonResponse({"success": False, "error": "No archetype title provided"}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
 def detail_task_view(request, task_id):
@@ -484,6 +564,15 @@ def privacy_policy_view(request):
         'active_tab': 'profile'
     }
     return render(request, 'agents/privacy.html', context)
+
+
+def terms_of_use_view(request):
+    """Renders the Terms of Use and Learner Service Agreement page."""
+    context = {
+        'page_title': 'Terms of Use & Learner Agreement',
+        'active_tab': 'terms'
+    }
+    return render(request, 'agents/terms.html', context)
 
 
 def resolve_safe_next_url(raw_next):
@@ -619,7 +708,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 migrate_session_marks(request, user)
-                messages.success(request, f"Welcome back, {user.first_name or user.username}! Ready to use the AI Counselor.")
+                messages.success(request, f"Welcome back, {user.first_name or user.username}! Ready to use PfunzoAI.")
                 return redirect(next_url)
             else:
                 error_message = "Invalid username or password. Please try again or tap 'Forgot Password' below."
@@ -814,7 +903,7 @@ def google_auth_api(request):
 def logout_view(request):
     """Logs out the active user and returns to login page."""
     logout(request)
-    messages.info(request, "You have been logged out successfully. Sign in again whenever you want to use the AI Counselor.")
+    messages.info(request, "You have been logged out successfully. Sign in again whenever you want to chat with PfunzoAI.")
     return redirect('login')
 
 

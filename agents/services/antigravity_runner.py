@@ -22,7 +22,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
     try:
         from google.antigravity import Agent, LocalAgentConfig
         system_text = (
-            "You are PfunzoBridge AI, an autonomous South African student advisor and education "
+            "You are PfunzoAI, an autonomous South African student advisor and education "
             "guidance agent. Provide structured, empathetic, and touch-friendly markdown summaries "
             "for South African matriculants, university, and TVET applicants."
         )
@@ -261,7 +261,7 @@ async def stream_agent_execution(prompt: str, profile=None) -> AsyncGenerator[st
     # 10. General Counselor Guidance
     else:
         thought = (
-            f"### PfunzoBridge SA Agent Counselor\n\n"
+            f"### PfunzoAI Education Advisor\n\n"
             f"Thank you for reaching out regarding: *\"{prompt.strip()}\"*\n\n"
             "As your dedicated South African Education Guide, here is how we can assist you:\n\n"
             "1. **APS Calculation:** Calculate your exact Admission Point Score according to DBE and university rules.\n"

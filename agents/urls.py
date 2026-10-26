@@ -15,16 +15,20 @@ urlpatterns = [
 
     # Career Guidance Quiz
     path('quiz/', views.career_quiz_view, name='career_quiz'),
+    path('api/save-career-archetype/', views.save_career_archetype_api, name='save_career_archetype_api'),
 
     # Centralized Bursaries & NSFAS
     path('bursaries/', views.bursaries_view, name='bursaries_index'),
     path('api/track-bursary/', views.track_bursary_api, name='track_bursary_api'),
     path('api/submit-application/', views.submit_application_api, name='submit_application_api'),
 
-    # Student Profile & Authentication
+    # Student Profile, POPIA & Authentication
     path('profile/', views.profile_view, name='student_profile'),
+    path('profile/download-data/', views.download_user_data_pdf, name='download_user_data_pdf'),
+    path('profile/delete-account/', views.delete_account_view, name='delete_account'),
     path('complete-profile/', views.complete_profile_view, name='complete_profile'),
     path('privacy/', views.privacy_policy_view, name='privacy_policy'),
+    path('terms/', views.terms_of_use_view, name='terms_of_use'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('api/auth/google/', views.google_auth_api, name='google_auth_api'),

@@ -133,11 +133,13 @@
         {% endif %}
         {% block content %}{% endblock %}
 
-        <!-- App Footer with POPIA Compliance Link -->
+        <!-- App Footer with POPIA Compliance & Terms of Use Links -->
         <footer class="pt-6 pb-2 text-center text-[10px] text-slate-500 space-y-1">
             <p>PfunzoBridge &bull; South African Higher Education Access</p>
             <p>
-                <a href="{% url 'privacy_policy' %}" class="text-teal-400 hover:text-teal-300 underline underline-offset-2">POPIA Privacy &amp; Data Rights</a>
+                <a href="{% url 'privacy_policy' %}" class="text-teal-400 hover:text-teal-300 underline underline-offset-2">POPIA Privacy</a>
+                &bull;
+                <a href="{% url 'terms_of_use' %}" class="text-teal-400 hover:text-teal-300 underline underline-offset-2">Terms of Use</a>
                 &bull;
                 <a href="mailto:privacy@pfunzobridge.co.za" class="hover:underline">privacy@pfunzobridge.co.za</a>
             </p>
@@ -147,18 +149,18 @@
         <div class="h-28 w-full shrink-0" aria-hidden="true"></div>
     </main>
 
-    <!-- Floating Action Button (FAB) for AI Counselor -->
-    {% if active_tab != 'agents' %}
+    <!-- Floating Action Button (FAB) for PfunzoAI (Authenticated Users Only) -->
+    {% if active_tab != 'agents' and user.is_authenticated %}
     <div class="fixed bottom-24 right-4 sm:right-[max(1rem,calc(50%-17.5rem))] z-40">
         <a href="{% url 'mobile_dashboard' %}" 
            class="group flex items-center space-x-2 py-3 px-4 rounded-full bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-400 text-slate-950 font-black text-xs shadow-2xl shadow-teal-500/40 hover:shadow-teal-400/50 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-slate-900 tap-scale"
-           title="Open AI Counselor">
+           title="Open PfunzoAI">
             <div class="w-6 h-6 rounded-full bg-slate-950/20 flex items-center justify-center">
                 <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
             </div>
-            <span class="tracking-wide uppercase font-black text-xs">AI Counselor</span>
+            <span class="tracking-wide uppercase font-black text-xs">PfunzoAI</span>
         </a>
     </div>
     {% endif %}
