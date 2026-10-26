@@ -61,3 +61,7 @@ desktop.ini
 Sonke Platform*
 Sonke Platform - Ipfi Nyamande_files/
 *.pdf
+
+# Markdown files (ignore internal notes/plans/slides, keep README.md)
+*.md
+!README.md
