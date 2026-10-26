@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import urllib.request
+import urllib.parse
 import uuid
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
@@ -49,28 +50,9 @@ def get_or_create_session(request):
     return session_id
 
 def seed_demo_profile(session_id, username):
-    """Initializes rich demo data for evaluators."""
+    """Initializes student profile if not already existing."""
     profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
-    if username == 'judge':
-        profile.full_name = 'Judge Evaluator'
-        profile.grade = '12'
-        profile.province = 'Gauteng'
-        profile.school_name = 'National Education Evaluation Center'
-        profile.calculated_aps = 38
-        profile.id_number = '0601015082088'
-        profile.phone = '082 999 8888'
-        profile.email = 'judge@pfunzobridge.co.za'
-        profile.save()
-    elif username == 'student':
-        profile.full_name = 'Ipfi Nyamande'
-        profile.grade = '12'
-        profile.province = 'Gauteng'
-        profile.school_name = 'Orlando West High School'
-        profile.calculated_aps = 35
-        profile.id_number = '0602145890082'
-        profile.phone = '082 123 4567'
-        profile.email = 'ipfi@pfunzobridge.co.za'
-        profile.save()
+    return profile
 
 def migrate_session_marks(request, user):
     """Transfers any marks entered while in guest session into the user's permanent profile."""
@@ -469,8 +451,56 @@ def detail_task_view(request, task_id):
     return render(request, 'agents/detail.html', context)
 
 
+@login_required(login_url='login')
+def complete_profile_view(request):
+    """Allows newly authenticated Google or email users to complete their profile details."""
+    session_id = f"user_{request.user.id}"
+    profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
+    next_url = request.POST.get('next') or request.GET.get('next') or reverse('mobile_dashboard')
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        grade = request.POST.get('grade', '12')
+        province = request.POST.get('province', 'Gauteng')
+        school_name = request.POST.get('school_name', '').strip()
+        target_career = request.POST.get('target_career', '').strip()
+
+        if full_name:
+            profile.full_name = full_name
+            parts = full_name.split()
+            request.user.first_name = parts[0]
+            if len(parts) > 1:
+                request.user.last_name = " ".join(parts[1:])
+            request.user.save()
+
+        profile.grade = grade
+        profile.province = province
+        profile.school_name = school_name
+        profile.target_career = target_career
+        profile.is_onboarded = True
+        if request.user.email:
+            profile.email = request.user.email
+        profile.save()
+
+        messages.success(request, f"Profile completed! Welcome to PfunzoBridge, {profile.full_name}.")
+        return redirect(next_url)
+
+    prefill_name = profile.full_name
+    if not prefill_name or prefill_name == 'Student Learner':
+        prefill_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+
+    context = {
+        'page_title': 'Complete Your Profile',
+        'active_tab': 'profile',
+        'profile': profile,
+        'prefill_name': prefill_name,
+        'next': next_url,
+    }
+    return render(request, 'agents/complete_profile.html', context)
+
+
 def login_view(request):
-    """Mobile login, quick demo evaluation access, and student registration."""
+    """Mobile login, student registration, and user-agnostic Google authentication."""
     next_url = request.POST.get('next') or request.GET.get('next') or 'mobile_dashboard'
 
     if request.user.is_authenticated:
@@ -479,10 +509,14 @@ def login_view(request):
     error_message = None
     success_message = None
 
-    # Direct 1-Tap Google Sign-In (Supports both GET link and POST request)
+    # User-Agnostic Google Sign-In Action (Supports both GET link and POST request)
     req_action = request.POST.get('action') or request.GET.get('action')
-    if req_action in ('google', 'quick_login_nyamande'):
-        email = (request.POST.get('email') or request.GET.get('email') or 'nyamandeipfi@gmail.com').strip().lower()
+    if req_action == 'google':
+        email = (request.POST.get('email') or request.GET.get('email') or '').strip().lower()
+        if not email or '@' not in email:
+            # When no email is provided, do NOT default to any hardcoded account!
+            return redirect(f"{reverse('login')}?show_google_modal=1" + (f"&next={urllib.parse.quote(next_url)}" if next_url else ""))
+
         user = User.objects.filter(email__iexact=email).first()
         if not user:
             user = User.objects.filter(username__iexact=email).first()
@@ -493,75 +527,37 @@ def login_view(request):
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}_{counter}"
                 counter += 1
+            full_name = (request.POST.get('name') or request.GET.get('name') or '').strip()
+            parts = full_name.split() if full_name else []
+            first_name = parts[0] if parts else base_username.capitalize()
+            last_name = " ".join(parts[1:]) if len(parts) > 1 else ''
             user = User.objects.create_user(
                 username=username,
                 email=email,
-                first_name='Ipfi',
-                last_name='Nyamande'
+                first_name=first_name,
+                last_name=last_name
             )
-        else:
-            if not user.first_name:
-                user.first_name = 'Ipfi'
-            if not user.last_name:
-                user.last_name = 'Nyamande'
-            user.save()
 
         login(request, user)
-        seed_demo_profile(f"user_{user.id}", user.username)
         profile, _ = StudentProfile.objects.get_or_create(session_id=f"user_{user.id}")
-        if not profile.full_name:
+        if not profile.full_name or profile.full_name == 'Student Learner':
             profile.full_name = f"{user.first_name} {user.last_name}".strip() or user.username
         profile.email = email
         profile.save()
 
         migrate_session_marks(request, user)
-        messages.success(request, f"Welcome, {user.first_name or user.username}! Successfully signed in with Google ({email}).")
+
+        if not profile.is_onboarded and not profile.school_name:
+            return redirect(f"{reverse('complete_profile')}?next={urllib.parse.quote(next_url)}")
+
+        messages.success(request, f"Welcome, {user.first_name or user.username}! Successfully signed in with Google.")
         return redirect(next_url)
 
     if request.method == 'POST':
         action = request.POST.get('action')
 
-        # Demo Logins for Evaluators
-        if action == 'demo_judge':
-            user, _ = User.objects.get_or_create(
-                username='judge',
-                defaults={'first_name': 'Judge', 'last_name': 'Evaluator', 'email': 'judge@pfunzobridge.co.za'}
-            )
-            login(request, user)
-            seed_demo_profile(f"user_{user.id}", 'judge')
-            messages.success(request, "Logged in as Judge Evaluator. Ready to use the AI Counselor.")
-            return redirect(next_url)
-
-        elif action == 'demo_student':
-            user, _ = User.objects.get_or_create(
-                username='student',
-                defaults={'first_name': 'Ipfi', 'last_name': 'Nyamande', 'email': 'ipfi@edubridge.co.za'}
-            )
-            login(request, user)
-            seed_demo_profile(f"user_{user.id}", 'student')
-            messages.success(request, "Logged in as Student Learner (Ipfi Nyamande). Ready to use the AI Counselor.")
-            return redirect(next_url)
-
-        # 1-Tap Mobile Sync Login for nyamandeipfi@gmail.com
-        elif action == 'quick_login_nyamande':
-            user = User.objects.filter(username='nyamandeipfi@gmail.com').first()
-            if not user:
-                user = User.objects.filter(email__iexact='nyamandeipfi@gmail.com').first()
-            if not user:
-                user = User.objects.create_user(
-                    username='nyamandeipfi@gmail.com',
-                    email='nyamandeipfi@gmail.com',
-                    first_name='Ipfi',
-                    last_name='Nyamande'
-                )
-            login(request, user)
-            seed_demo_profile(f"user_{user.id}", user.username)
-            migrate_session_marks(request, user)
-            messages.success(request, f"Synced! Logged in as {user.username}. Phone & laptop are now connected.")
-            return redirect(next_url)
-
         # Standard Credentials Login (supports Username or Email)
-        elif action == 'login':
+        if action == 'login':
             username = request.POST.get('username', '').strip()
             password = request.POST.get('password', '').strip()
             user = authenticate(request, username=username, password=password)
@@ -573,7 +569,6 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
-                seed_demo_profile(f"user_{user.id}", user.username)
                 migrate_session_marks(request, user)
                 messages.success(request, f"Welcome back, {user.first_name or user.username}! Ready to use the AI Counselor.")
                 return redirect(next_url)
@@ -598,7 +593,6 @@ def login_view(request):
                     user.set_password(new_password)
                     user.save()
                     login(request, user)
-                    seed_demo_profile(f"user_{user.id}", user.username)
                     messages.success(request, f"Password successfully reset for {user.username}! You are now logged in.")
                     return redirect(next_url)
                 else:
@@ -627,6 +621,7 @@ def login_view(request):
                 profile.grade = grade
                 profile.province = province
                 profile.school_name = school_name
+                profile.is_onboarded = True
                 profile.save()
 
                 messages.success(request, f"Account created! Welcome to PfunzoBridge, {profile.full_name}.")
@@ -639,6 +634,7 @@ def login_view(request):
         'success_message': success_message,
         'next': next_url,
         'google_client_id': getattr(settings, 'GOOGLE_CLIENT_ID', '') or os.environ.get('GOOGLE_CLIENT_ID', ''),
+        'show_google_modal': request.GET.get('show_google_modal') == '1',
     }
     return render(request, 'agents/login.html', context)
 
@@ -727,17 +723,33 @@ def google_auth_api(request):
         # Link student profile & session marks
         seed_demo_profile(f"user_{user.id}", user.username)
         profile, _ = StudentProfile.objects.get_or_create(session_id=f"user_{user.id}")
-        if not profile.full_name and full_name:
-            profile.full_name = full_name
-            profile.save()
+        if not profile.full_name or profile.full_name == 'Student Learner':
+            if full_name:
+                profile.full_name = full_name
+            elif user.first_name:
+                profile.full_name = f"{user.first_name} {user.last_name}".strip()
+            else:
+                profile.full_name = user.username
+        if email:
+            profile.email = email
+        profile.save()
 
         migrate_session_marks(request, user)
+
+        # Determine target redirect: if profile is incomplete/not onboarded, direct to complete_profile
+        is_new_profile = not profile.is_onboarded and not profile.school_name
+        if is_new_profile:
+            final_redirect = f"{reverse('complete_profile')}?next={urllib.parse.quote(next_url)}"
+        else:
+            final_redirect = next_url
+
         messages.success(request, f"Welcome, {user.first_name or user.username}! Successfully signed in with Google.")
 
         return JsonResponse({
             "success": True,
-            "redirect_url": next_url,
+            "redirect_url": final_redirect,
             "username": user.username,
+            "is_onboarded": profile.is_onboarded,
             "message": f"Welcome, {user.first_name or user.username}!"
         })
 

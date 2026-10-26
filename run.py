@@ -21,7 +21,7 @@ for pkg in USER_PACKAGES:
 def main():
     print("=" * 65)
     print("  PfunzoBridge - Access to Higher Education Platform")
-    print("  Developer & Project Lead: Ipfi Nyamande")
+    print("  Developer & Project Lead: PfunzoBridge Team")
     print("=" * 65)
     print("Starting Django server at http://127.0.0.1:8000 ...")
     print("For mobile testing on same Wi-Fi: http://0.0.0.0:8000")

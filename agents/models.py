@@ -48,6 +48,7 @@ class StudentProfile(models.Model):
     calculated_aps = models.IntegerField(default=0)
     target_career = models.CharField(max_length=180, blank=True, default='')
     subjects_json = models.JSONField(default=list, blank=True)
+    is_onboarded = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

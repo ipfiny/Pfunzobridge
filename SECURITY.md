@@ -28,8 +28,8 @@ If you discover a security vulnerability or credential leak within this reposito
 
 1. **Do NOT open a public GitHub issue.**
 2. Report the vulnerability privately to the project maintainer:
-   * **Lead Developer:** Ipfi Nyamande
-   * **Email:** [security@pfunzobridge.co.za](mailto:security@pfunzobridge.co.za) / [nyamandeipfi@gmail.com](mailto:nyamandeipfi@gmail.com)
+   * **Security Contact:** PfunzoBridge Security Team
+   * **Email:** [security@pfunzobridge.co.za](mailto:security@pfunzobridge.co.za)
 3. Please include:
    * Description of the vulnerability.
    * Steps or script to reproduce the issue.

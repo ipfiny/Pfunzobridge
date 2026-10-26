@@ -67,10 +67,10 @@
                 </div>
             </div>
 
-            <!-- Coverage Details -->
-            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs text-slate-300">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Coverage &amp; Benefits:</span>
-                {{ b.coverage_details }}
+            <!-- Coverage Details (Highlighted by color, not card-in-card) -->
+            <div class="text-xs text-slate-300">
+                <span class="text-[11px] font-semibold text-teal-400 uppercase tracking-wider block mb-0.5">Coverage &amp; Benefits:</span>
+                <span class="text-slate-200">{{ b.coverage_details }}</span>
             </div>
 
             <!-- Eligible Fields -->
@@ -140,7 +140,7 @@
 
             <!-- Document Checklist if tracked -->
             {% if tracker %}
-            <div class="mt-2 pt-2 border-t border-teal-900/60 bg-teal-950/20 p-2.5 rounded-xl">
+            <div class="mt-2 pt-2 border-t border-slate-800">
                 <span class="text-[11px] font-bold text-teal-300 uppercase block mb-1.5">Application Documents Ready:</span>
                 <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
                     <label class="flex items-center space-x-1.5 cursor-pointer">

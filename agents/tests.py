@@ -66,7 +66,7 @@ class MobileViewEndpointsTests(TestCase):
         response = unauthed_client.get(reverse('login'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "PfunzoBridge Access")
-        self.assertContains(response, "Continue with Google")
+        self.assertContains(response, "Sign in with Google")
 
     def test_dashboard_view(self):
         response = self.client.get(reverse('mobile_dashboard'))
@@ -151,7 +151,9 @@ class MobileViewEndpointsTests(TestCase):
         user = User.objects.get(email='sipho.google@example.com')
         self.assertEqual(user.first_name, 'Sipho')
         self.assertEqual(user.last_name, 'Khumalo')
-        self.assertTrue(StudentProfile.objects.filter(session_id=f"user_{user.id}").exists())
+        profile = StudentProfile.objects.get(session_id=f"user_{user.id}")
+        self.assertFalse(profile.is_onboarded)
+        self.assertIn(reverse('complete_profile'), data['redirect_url'])
 
     def test_google_auth_api_empty_email(self):
         test_client = Client()
@@ -163,18 +165,49 @@ class MobileViewEndpointsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
 
-    def test_direct_google_sign_in_action(self):
+    def test_complete_profile_flow(self):
+        user = User.objects.create_user(username='newgoogleuser', email='newgoogle@example.com')
+        client = Client()
+        client.force_login(user)
+
+        # GET complete profile form
+        get_res = client.get(reverse('complete_profile'))
+        self.assertEqual(get_res.status_code, 200)
+        self.assertContains(get_res, "Complete Your Student Profile")
+        self.assertContains(get_res, "newgoogle@example.com")
+
+        # POST profile completion
+        post_res = client.post(reverse('complete_profile'), data={
+            'full_name': 'Sipho Dlamini',
+            'grade': '12',
+            'province': 'Limpopo',
+            'school_name': 'Mbilwi Secondary School',
+            'target_career': 'Mechatronics Engineering'
+        })
+        self.assertEqual(post_res.status_code, 302)
+        profile = StudentProfile.objects.get(session_id=f"user_{user.id}")
+        self.assertTrue(profile.is_onboarded)
+        self.assertEqual(profile.school_name, 'Mbilwi Secondary School')
+        self.assertEqual(profile.province, 'Limpopo')
+        self.assertEqual(profile.target_career, 'Mechatronics Engineering')
+
+    def test_direct_google_sign_in_action_without_email_does_not_default(self):
         test_client = Client()
         response = test_client.get(reverse('login') + '?action=google')
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(User.objects.filter(email='nyamandeipfi@gmail.com').exists())
-        user = User.objects.get(email='nyamandeipfi@gmail.com')
-        self.assertTrue(StudentProfile.objects.filter(session_id=f"user_{user.id}").exists())
+        self.assertIn('show_google_modal=1', response.url)
+        # Ensure NO personal default user is created
+        self.assertFalse(User.objects.filter(email='nyamandeipfi@gmail.com').exists())
 
-        # Test dashboard is accessible following Google sign-in
-        dash_response = test_client.get(reverse('mobile_dashboard'))
-        self.assertEqual(dash_response.status_code, 200)
-        self.assertContains(dash_response, "PfunzoBridge SA Advisor")
+    def test_direct_google_sign_in_action_with_user_email(self):
+        test_client = Client()
+        response = test_client.get(reverse('login') + '?action=google&email=learner@example.com&name=Thabo+Mokoena')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(User.objects.filter(email='learner@example.com').exists())
+        user = User.objects.get(email='learner@example.com')
+        self.assertEqual(user.first_name, 'Thabo')
+        self.assertEqual(user.last_name, 'Mokoena')
+        self.assertIn(reverse('complete_profile'), response.url)
 
     def test_deadline_badge_colors(self):
         today = timezone.localdate()

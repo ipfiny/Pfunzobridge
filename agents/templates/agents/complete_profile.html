@@ -1,0 +1,107 @@
+{% extends 'agents/base.html' %}
+
+{% block title %}Complete Student Profile | PfunzoBridge{% endblock %}
+
+{% block content %}
+<div class="space-y-4 max-w-lg mx-auto">
+
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/80 p-5 shadow-xl text-center">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center font-black text-slate-950 mx-auto shadow-lg shadow-teal-500/20 mb-3">
+            <svg class="w-7 h-7 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <span class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/80 mb-2">
+            <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            <span>Google Account Linked</span>
+        </span>
+        <h2 class="text-lg font-black text-white">Complete Your Student Profile</h2>
+        <p class="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
+            Fill in your high school details below so PfunzoBridge can accurately calculate your APS, match you with eligible bursaries, and track deadlines.
+        </p>
+    </div>
+
+    <!-- Onboarding Form Container -->
+    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-5 shadow-lg space-y-4">
+        
+        <form method="post" action="{% url 'complete_profile' %}" class="space-y-3.5 text-xs">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <!-- Pre-filled Google Email (Read-Only) -->
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-slate-300">Connected Google Email</label>
+                    <span class="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Verified</span>
+                    </span>
+                </div>
+                <input type="email" value="{{ user.email }}" readonly 
+                    class="w-full rounded-xl bg-slate-950/70 border border-slate-700/80 p-2.5 text-slate-300 font-mono focus:outline-none cursor-not-allowed">
+            </div>
+
+            <!-- Full Legal Name (Pre-filled, Editable) -->
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Full Legal Name *</label>
+                <input type="text" name="full_name" required value="{{ prefill_name }}" placeholder="e.g. Sipho Dlamini" 
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+
+            <!-- Grade & Province -->
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Current Grade *</label>
+                    <select name="grade" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="12" {% if profile.grade == '12' %}selected{% endif %}>Grade 12 / Matric</option>
+                        <option value="11" {% if profile.grade == '11' %}selected{% endif %}>Grade 11</option>
+                        <option value="10" {% if profile.grade == '10' %}selected{% endif %}>Grade 10</option>
+                        <option value="matriculant" {% if profile.grade == 'matriculant' %}selected{% endif %}>Matric Passed / Gap</option>
+                        <option value="tvet" {% if profile.grade == 'tvet' %}selected{% endif %}>TVET Applicant</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">Province *</label>
+                    <select name="province" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+                        <option value="Gauteng" {% if profile.province == 'Gauteng' %}selected{% endif %}>Gauteng</option>
+                        <option value="Limpopo" {% if profile.province == 'Limpopo' %}selected{% endif %}>Limpopo</option>
+                        <option value="Mpumalanga" {% if profile.province == 'Mpumalanga' %}selected{% endif %}>Mpumalanga</option>
+                        <option value="KwaZulu-Natal" {% if profile.province == 'KwaZulu-Natal' %}selected{% endif %}>KwaZulu-Natal</option>
+                        <option value="Western Cape" {% if profile.province == 'Western Cape' %}selected{% endif %}>Western Cape</option>
+                        <option value="Eastern Cape" {% if profile.province == 'Eastern Cape' %}selected{% endif %}>Eastern Cape</option>
+                        <option value="Free State" {% if profile.province == 'Free State' %}selected{% endif %}>Free State</option>
+                        <option value="North West" {% if profile.province == 'North West' %}selected{% endif %}>North West</option>
+                        <option value="Northern Cape" {% if profile.province == 'Northern Cape' %}selected{% endif %}>Northern Cape</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- High School Name -->
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">High School Name *</label>
+                <input type="text" name="school_name" required value="{{ profile.school_name }}" placeholder="e.g. Orlando West High" 
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+
+            <!-- Target Career / Interest -->
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Target Degree / Career of Interest (Optional)</label>
+                <input type="text" name="target_career" value="{{ profile.target_career }}" placeholder="e.g. Computer Science, Medicine, Law" 
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-lg shadow-teal-500/25 tap-scale transition cursor-pointer">
+                Save &amp; Continue to PfunzoBridge &rarr;
+            </button>
+        </form>
+
+        <div class="pt-2 text-center border-t border-slate-800">
+            <a href="{% url 'mobile_dashboard' %}" class="text-[11px] text-slate-400 hover:text-teal-300 font-medium">
+                Skip for now &amp; go to Dashboard &rarr;
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
