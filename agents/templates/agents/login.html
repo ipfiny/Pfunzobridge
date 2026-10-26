@@ -67,7 +67,7 @@
             </button>
 
             <p class="text-[11px] text-slate-400 text-center">
-                Each student logs in with their own Gmail account. New users complete a brief profile next.
+                Each student logs in with their own Gmail account. By signing in, you agree to our <a href="{% url 'privacy_policy' %}" class="text-teal-400 underline hover:text-white">POPIA Privacy Notice</a>.
             </p>
         </div>
 
@@ -227,6 +227,10 @@
                 <input type="text" name="reg_school" placeholder="e.g. Orlando West High" 
                     class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-slate-100 focus:border-teal-500 focus:outline-none">
             </div>
+
+            <p class="text-[10px] text-slate-400 leading-tight">
+                By creating an account, you consent to our <a href="{% url 'privacy_policy' %}" class="text-teal-400 underline hover:text-white">POPIA Privacy Policy</a> for APS calculation and bursary tracking.
+            </p>
 
             <button type="submit" class="w-full py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-teal-500/25 tap-scale transition cursor-pointer">
                 Create Free Account

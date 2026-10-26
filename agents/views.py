@@ -452,6 +452,15 @@ def detail_task_view(request, task_id):
     return render(request, 'agents/detail.html', context)
 
 
+def privacy_policy_view(request):
+    """Renders the South African POPIA compliance policy and learner privacy notice."""
+    context = {
+        'page_title': 'POPIA Privacy Policy & Learner Rights',
+        'active_tab': 'profile'
+    }
+    return render(request, 'agents/privacy.html', context)
+
+
 def resolve_safe_next_url(raw_next):
     """Ensures redirect target is always a safe, valid absolute URL starting with '/' defaulting to profile."""
     if not raw_next or raw_next in ('mobile_dashboard', 'agents_index', 'login', 'student_profile'):

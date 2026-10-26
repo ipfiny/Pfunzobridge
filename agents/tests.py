@@ -123,6 +123,16 @@ class MobileViewEndpointsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Student Profile")
 
+    def test_privacy_policy_view(self):
+        response = self.client.get(reverse('privacy_policy'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "POPIA Act 4 of 2013 Compliant")
+        self.assertContains(response, "Ask for Permission First")
+        self.assertContains(response, "Collect Only What We Need")
+        self.assertContains(response, "Keep Data Safe &amp; Secure")
+        self.assertContains(response, "Give You Complete Control")
+        self.assertContains(response, "privacy@pfunzobridge.co.za")
+
     def test_apply_now_requires_login(self):
         unauthed_client = Client()
         response = unauthed_client.post(

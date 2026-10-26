@@ -132,6 +132,17 @@
         </div>
         {% endif %}
         {% block content %}{% endblock %}
+
+        <!-- App Footer with POPIA Compliance Link -->
+        <footer class="pt-6 pb-2 text-center text-[10px] text-slate-500 space-y-1">
+            <p>PfunzoBridge &bull; South African Higher Education Access</p>
+            <p>
+                <a href="{% url 'privacy_policy' %}" class="text-teal-400 hover:text-teal-300 underline underline-offset-2">POPIA Privacy &amp; Data Rights</a>
+                &bull;
+                <a href="mailto:privacy@pfunzobridge.co.za" class="hover:underline">privacy@pfunzobridge.co.za</a>
+            </p>
+        </footer>
+
         <!-- Safe bottom clearance spacer so fixed bottom bar never overlaps content -->
         <div class="h-28 w-full shrink-0" aria-hidden="true"></div>
     </main>

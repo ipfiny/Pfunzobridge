@@ -24,6 +24,7 @@ urlpatterns = [
     # Student Profile & Authentication
     path('profile/', views.profile_view, name='student_profile'),
     path('complete-profile/', views.complete_profile_view, name='complete_profile'),
+    path('privacy/', views.privacy_policy_view, name='privacy_policy'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('api/auth/google/', views.google_auth_api, name='google_auth_api'),
