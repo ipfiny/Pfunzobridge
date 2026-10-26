@@ -453,16 +453,16 @@ def detail_task_view(request, task_id):
 
 
 def resolve_safe_next_url(raw_next):
-    """Ensures redirect target is always a safe, valid absolute URL starting with '/'."""
-    if not raw_next or raw_next in ('mobile_dashboard', 'agents_index', 'student_profile', 'login'):
-        return reverse('mobile_dashboard')
+    """Ensures redirect target is always a safe, valid absolute URL starting with '/' defaulting to profile."""
+    if not raw_next or raw_next in ('mobile_dashboard', 'agents_index', 'login', 'student_profile'):
+        return reverse('student_profile')
     raw_next = str(raw_next).strip()
     if raw_next.startswith('/'):
         return raw_next
     try:
         return reverse(raw_next)
     except Exception:
-        return reverse('mobile_dashboard')
+        return reverse('student_profile')
 
 
 @login_required(login_url='login')

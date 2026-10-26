@@ -544,7 +544,7 @@ function handleResetPasswordSubmit(e) {
             feedback.innerHTML = `<strong>${data.message}</strong> Redirecting...`;
             feedback.className = "p-2.5 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-300 block";
             setTimeout(() => {
-                window.location.href = "{% url 'mobile_dashboard' %}";
+                window.location.href = "{% url 'student_profile' %}";
             }, 1000);
         } else {
             feedback.innerText = data.error || "Reset failed. Please check username or create an account.";
@@ -630,7 +630,7 @@ function selectFoundUsername(uname) {
 
 // Google Sign-In Integration (Official GIS + Instant 1-Tap)
 const GOOGLE_CLIENT_ID = "{{ google_client_id|default:'' }}";
-const NEXT_URL = "{{ next|default:'/'|escapejs }}";
+const NEXT_URL = "{{ next|default:'/profile/'|escapejs }}";
 
 function handleGoogleClick(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -692,7 +692,7 @@ function handleManualGoogleSignIn(e) {
         if (data.success) {
             feedback.className = "p-2.5 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-300 block";
             feedback.innerText = "Success! Redirecting...";
-            let targetUrl = data.redirect_url || "{% url 'mobile_dashboard' %}";
+            let targetUrl = data.redirect_url || "{% url 'student_profile' %}";
             if (!targetUrl.startsWith('/') && !targetUrl.startsWith('http')) {
                 targetUrl = '/' + (targetUrl === 'mobile_dashboard' ? '' : targetUrl);
             }
@@ -726,7 +726,7 @@ function handleGoogleCredentialResponse(response) {
     .then(data => {
         if (data.success) {
             if (btnText) btnText.innerText = "Success! Redirecting...";
-            let targetUrl = data.redirect_url || "{% url 'mobile_dashboard' %}";
+            let targetUrl = data.redirect_url || "{% url 'student_profile' %}";
             if (!targetUrl.startsWith('/') && !targetUrl.startsWith('http')) {
                 targetUrl = '/' + (targetUrl === 'mobile_dashboard' ? '' : targetUrl);
             }

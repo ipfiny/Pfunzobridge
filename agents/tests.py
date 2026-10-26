@@ -204,9 +204,8 @@ class MobileViewEndpointsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data['success'])
-        # Must be an absolute path starting with '/', NEVER relative like 'mobile_dashboard'
-        self.assertTrue(data['redirect_url'].startswith('/'))
-        self.assertNotEqual(data['redirect_url'], 'mobile_dashboard')
+        # Must land on profile screen
+        self.assertEqual(data['redirect_url'], reverse('student_profile'))
         self.assertNotIn('login/mobile_dashboard', data['redirect_url'])
 
     def test_complete_profile_flow(self):
@@ -229,6 +228,7 @@ class MobileViewEndpointsTests(TestCase):
             'target_career': 'Mechatronics Engineering'
         })
         self.assertEqual(post_res.status_code, 302)
+        self.assertEqual(post_res.url, reverse('student_profile'))
         profile = StudentProfile.objects.get(session_id=f"user_{user.id}")
         self.assertTrue(profile.is_onboarded)
         self.assertEqual(profile.school_name, 'Mbilwi Secondary School')
