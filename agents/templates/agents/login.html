@@ -635,7 +635,7 @@ function selectFoundUsername(uname) {
 
 // Google Sign-In Integration (Official GIS + Instant 1-Tap)
 const GOOGLE_CLIENT_ID = "{{ google_client_id|default:'' }}";
-const NEXT_URL = "{{ next|escapejs }}";
+const NEXT_URL = "{{ next|default:'/'|escapejs }}";
 
 function handleGoogleClick(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -698,7 +698,11 @@ function handleManualGoogleSignIn(e) {
         if (data.success) {
             feedback.className = "p-2.5 rounded-xl text-xs bg-emerald-950 border border-emerald-800 text-emerald-300 block";
             feedback.innerText = "Success! Redirecting...";
-            setTimeout(() => { window.location.href = data.redirect_url || "{% url 'mobile_dashboard' %}"; }, 600);
+            let targetUrl = data.redirect_url || "{% url 'mobile_dashboard' %}";
+            if (!targetUrl.startsWith('/') && !targetUrl.startsWith('http')) {
+                targetUrl = '/' + (targetUrl === 'mobile_dashboard' ? '' : targetUrl);
+            }
+            setTimeout(() => { window.location.href = targetUrl; }, 600);
         } else {
             btn.disabled = false;
             btn.innerText = "Continue to PfunzoBridge →";
@@ -728,7 +732,11 @@ function handleGoogleCredentialResponse(response) {
     .then(data => {
         if (data.success) {
             if (btnText) btnText.innerText = "Success! Redirecting...";
-            window.location.href = data.redirect_url || "{% url 'mobile_dashboard' %}";
+            let targetUrl = data.redirect_url || "{% url 'mobile_dashboard' %}";
+            if (!targetUrl.startsWith('/') && !targetUrl.startsWith('http')) {
+                targetUrl = '/' + (targetUrl === 'mobile_dashboard' ? '' : targetUrl);
+            }
+            window.location.href = targetUrl;
         } else {
             alert(data.error || "Google Sign-In failed.");
             if (btnText) btnText.innerText = "Continue with Google";

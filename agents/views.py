@@ -451,12 +451,25 @@ def detail_task_view(request, task_id):
     return render(request, 'agents/detail.html', context)
 
 
+def resolve_safe_next_url(raw_next):
+    """Ensures redirect target is always a safe, valid absolute URL starting with '/'."""
+    if not raw_next or raw_next in ('mobile_dashboard', 'agents_index', 'student_profile', 'login'):
+        return reverse('mobile_dashboard')
+    raw_next = str(raw_next).strip()
+    if raw_next.startswith('/'):
+        return raw_next
+    try:
+        return reverse(raw_next)
+    except Exception:
+        return reverse('mobile_dashboard')
+
+
 @login_required(login_url='login')
 def complete_profile_view(request):
     """Allows newly authenticated Google or email users to complete their profile details."""
     session_id = f"user_{request.user.id}"
     profile, _ = StudentProfile.objects.get_or_create(session_id=session_id)
-    next_url = request.POST.get('next') or request.GET.get('next') or reverse('mobile_dashboard')
+    next_url = resolve_safe_next_url(request.POST.get('next') or request.GET.get('next'))
 
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
@@ -501,7 +514,7 @@ def complete_profile_view(request):
 
 def login_view(request):
     """Mobile login, student registration, and user-agnostic Google authentication."""
-    next_url = request.POST.get('next') or request.GET.get('next') or 'mobile_dashboard'
+    next_url = resolve_safe_next_url(request.POST.get('next') or request.GET.get('next'))
 
     if request.user.is_authenticated:
         return redirect(next_url)
@@ -650,7 +663,7 @@ def google_auth_api(request):
         credential = data.get('credential', '').strip()
         manual_email = data.get('email', '').strip()
         manual_name = data.get('name', '').strip()
-        next_url = data.get('next') or request.GET.get('next') or reverse('mobile_dashboard')
+        next_url = resolve_safe_next_url(data.get('next') or request.GET.get('next'))
 
         user_info = {}
 
@@ -741,7 +754,7 @@ def google_auth_api(request):
         if is_new_profile:
             final_redirect = f"{reverse('complete_profile')}?next={urllib.parse.quote(next_url)}"
         else:
-            final_redirect = next_url
+            final_redirect = resolve_safe_next_url(next_url)
 
         messages.success(request, f"Welcome, {user.first_name or user.username}! Successfully signed in with Google.")
 

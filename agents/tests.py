@@ -165,6 +165,33 @@ class MobileViewEndpointsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()['success'])
 
+    def test_google_auth_api_second_login_redirects_to_root(self):
+        # User already exists and is onboarded
+        user = User.objects.create_user(username='returningstudent', email='returning@example.com')
+        profile, _ = StudentProfile.objects.get_or_create(session_id=f"user_{user.id}")
+        profile.is_onboarded = True
+        profile.school_name = "Pretoria Boys High"
+        profile.save()
+
+        test_client = Client()
+        payload = {
+            'email': 'returning@example.com',
+            'name': 'Returning Student',
+            'next': 'mobile_dashboard'
+        }
+        response = test_client.post(
+            reverse('google_auth_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        # Must be an absolute path starting with '/', NEVER relative like 'mobile_dashboard'
+        self.assertTrue(data['redirect_url'].startswith('/'))
+        self.assertNotEqual(data['redirect_url'], 'mobile_dashboard')
+        self.assertNotIn('login/mobile_dashboard', data['redirect_url'])
+
     def test_complete_profile_flow(self):
         user = User.objects.create_user(username='newgoogleuser', email='newgoogle@example.com')
         client = Client()
