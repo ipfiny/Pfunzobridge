@@ -24,7 +24,7 @@ from .services.aps_service import calculate_student_aps, SA_DEGREE_CATALOG
 from .services.data_store import DEFAULT_BURSARIES, CAREER_QUIZ_QUESTIONS, CAREER_ARCHETYPES
 
 def ensure_seed_data():
-    """Initializes default bursary items if database is empty."""
+    """Initializes default bursary items and ensures demo user account exists."""
     if BursaryItem.objects.count() == 0:
         for b in DEFAULT_BURSARIES:
             BursaryItem.objects.create(
@@ -39,6 +39,31 @@ def ensure_seed_data():
                 application_url=b['application_url'],
                 featured=b['featured']
             )
+
+    # Ensure demo account exists for hackathon evaluation
+    demo_user = User.objects.filter(username='demo').first()
+    if not demo_user:
+        demo_user = User.objects.create_user(
+            username='demo',
+            email='demo@pfunzobridge.co.za',
+            password='password123',
+            first_name='Demo',
+            last_name='Student'
+        )
+    else:
+        # Guarantee demo password matches password123
+        demo_user.set_password('password123')
+        demo_user.save()
+
+    demo_profile, _ = StudentProfile.objects.get_or_create(session_id=f"user_{demo_user.id}")
+    if not demo_profile.is_onboarded:
+        demo_profile.full_name = "Demo Student"
+        demo_profile.grade = "12"
+        demo_profile.province = "Gauteng"
+        demo_profile.calculated_aps = 36
+        demo_profile.is_onboarded = True
+        demo_profile.target_career = "BSc Computer Science / Software Engineering"
+        demo_profile.save()
 
 def get_or_create_session(request):
     """Ensures a unique session ID for users, linking to user ID if logged in."""
@@ -524,6 +549,7 @@ def complete_profile_view(request):
 
 def login_view(request):
     """Mobile login, student registration, and user-agnostic Google authentication."""
+    ensure_seed_data()
     next_url = resolve_safe_next_url(request.POST.get('next') or request.GET.get('next'))
 
     if request.user.is_authenticated:
